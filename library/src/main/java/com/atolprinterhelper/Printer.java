@@ -178,7 +178,7 @@ public class Printer {
         });
     }
 
-    private PrintError perform(PrinterAction action){
+    PrintError perform(PrinterAction action){
         if (!sc.isConnected()){
             sc.startService();
             return new PrintError(DefaultPrintError.SERVICE_CONNECTION);
@@ -258,5 +258,10 @@ public class Printer {
                 return new PrintError(DefaultPrintError.SUCCESS);
             }
         });
+    }
+
+
+    public DeviceSettings getDeviceSettings(){
+        return DeviceSettings.getInstance(this);
     }
 }
