@@ -1,4 +1,4 @@
-package com.atolprinterhelper.printer;
+package com.atolprinterhelper;
 
 public enum PaymentType {
     CASH(Printer.PAYMENT_TYPE_CASH),

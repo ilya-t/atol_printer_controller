@@ -1,4 +1,4 @@
-package com.atolprinterhelper.printer;
+package com.atolprinterhelper;
 
 public class CheckItem {
     private String title;

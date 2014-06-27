@@ -1,4 +1,4 @@
-package com.atolprinterhelper.printer;
+package com.atolprinterhelper;
 
 enum DefaultPrintError {
     SUCCESS(0, ""),

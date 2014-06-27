@@ -1,4 +1,4 @@
-package com.atolprinterhelper.printer;
+package com.atolprinterhelper;
 
 import android.app.Activity;
 import android.content.ComponentName;

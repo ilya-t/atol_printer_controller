@@ -2,10 +2,10 @@ package com.example;
 
 import android.app.Activity;
 
-import com.twocomrades.testzone.app.printer.CashCheck;
-import com.twocomrades.testzone.app.printer.CheckItem;
-import com.twocomrades.testzone.app.printer.PaymentType;
-import com.twocomrades.testzone.app.printer.Printer;
+import com.atolprinterhelper.CashCheck;
+import com.atolprinterhelper.CheckItem;
+import com.atolprinterhelper.PaymentType;
+import com.atolprinterhelper.Printer;
 
 import java.text.DateFormat;
 import java.util.Arrays;
