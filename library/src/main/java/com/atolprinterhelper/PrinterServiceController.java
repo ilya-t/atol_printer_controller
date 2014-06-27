@@ -19,19 +19,21 @@ class PrinterServiceController implements ServiceConnection{
     private IEcr iEcr = null;
 
     private boolean isBounded;
+    private Printer printer;
 
-    public static PrinterServiceController newInstance(Context context){
+    public static PrinterServiceController newInstance(Printer printer){
         if (instance == null){
-            instance = new PrinterServiceController(context);
+            instance = new PrinterServiceController(printer);
         }
         return instance;
     }
-    private PrinterServiceController(Context context){
-        init(context);
+    private PrinterServiceController(Printer printer){
+        init(printer);
     }
 
-    private void init(Context context) {
-        this.context = context;
+    private void init(Printer printer) {
+        this.context = printer.context;
+        this.printer = printer;
         serviceIntent = new Intent(SERVICE_PACKAGE);
     }
 
@@ -39,6 +41,7 @@ class PrinterServiceController implements ServiceConnection{
     public void onServiceConnected(ComponentName name, IBinder service) {
         iEcr = IEcr.Stub.asInterface(service);
         Log.v(TAG, "Connected");
+        printer.onServiceConnected();
     }
 
     @Override

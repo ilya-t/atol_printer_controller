@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.RemoteException;
 
 import com.atol.services.ecrservice.IEcr;
@@ -43,19 +44,29 @@ public class Printer {
 
     private final PrinterServiceController sc;
     private static final int REQUEST_CODE = 38921;
+    private static final String PREFERENCES_FILE = "atol_device_settings";
+    private static final String PREFS_DEVICE_SETTINGS = "deviceSettings";
+    final Context context;
+
+    private SharedPreferences preferences;
+    private boolean isConfiguring;
 
     public Printer(Context context) {
-        sc = PrinterServiceController.newInstance(context);
+        this.context = context;
+        sc = PrinterServiceController.newInstance(this);
 
         if (!sc.isConnected()){
             sc.startService();
         }
+
+        preferences = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
     }
 
     public void configure(Activity activity) {
         Intent intent = new Intent();
         intent.setComponent(new ComponentName("com.atol.services.ecrservice", "com.atol.services.ecrservice.settings.SettingsActivity"));
         activity.startActivityForResult(intent, REQUEST_CODE);
+        isConfiguring = true;
     }
 
     public boolean isConnected() {
@@ -75,11 +86,15 @@ public class Printer {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
                 return new PrintError(
-                        !printer.deviceSetting("deviceName").equals("") && !printer.deviceSetting("deviceAddress").equals("")
+                        isDeviceConfigured(printer)
                                 ? DefaultPrintError.SUCCESS
                                 : DefaultPrintError.FAIL);
             }
         }).isClear();
+    }
+
+    private boolean isDeviceConfigured(IEcr printer) throws RemoteException {
+        return !printer.deviceSetting("deviceName").equals("") && !printer.deviceSetting("deviceAddress").equals("");
     }
 
     public PrintError connect() {
@@ -89,6 +104,10 @@ public class Printer {
                 return new PrintError(printer.enableDevice(true));
             }
         });
+    }
+
+    private String getStoredSettings() {
+        return preferences.getString(PREFS_DEVICE_SETTINGS, "");
     }
 
     public PrintError setMode(final int mode){
@@ -161,11 +180,17 @@ public class Printer {
 
     private PrintError perform(PrinterAction action){
         if (!sc.isConnected()){
+            sc.startService();
             return new PrintError(DefaultPrintError.SERVICE_CONNECTION);
         }
 
         if (sc.getPrinterInterface() == null){
             return new PrintError(DefaultPrintError.EMPTY_INTERFACE);
+        }
+
+        if (isConfiguring){
+            isConfiguring = false;
+            saveDeviceSettings();
         }
 
         try {
@@ -193,7 +218,7 @@ public class Printer {
                         reportType,
                         0/*unused*/,
                         0,
-                        true));
+                        false));
             }
         });
     }
@@ -203,6 +228,34 @@ public class Printer {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
                 return new PrintError(printer.enableDevice(false));
+            }
+        });
+    }
+
+    void onServiceConnected() {
+        if (getStoredSettings().equals("")){
+            saveDeviceSettings();
+        }else{
+            perform(new PrinterAction() {
+                @Override
+                public PrintError run(IEcr printer) throws RemoteException {
+                    if (!isDeviceConfigured(printer)){
+                        printer.setDeviceSettings(getStoredSettings());
+                    }
+                    return null;
+                }
+            });
+        }
+    }
+
+    private void saveDeviceSettings() {
+        perform(new PrinterAction() {
+            @Override
+            public PrintError run(IEcr printer) throws RemoteException {
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putString(PREFS_DEVICE_SETTINGS, printer.deviceSettings());
+                editor.apply();
+                return new PrintError(DefaultPrintError.SUCCESS);
             }
         });
     }
