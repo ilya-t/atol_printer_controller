@@ -9,6 +9,11 @@ import android.os.RemoteException;
 import com.atol.services.ecrservice.IEcr;
 
 public class Printer {
+    public static final int REPORT_TYPE_TAPE_DAMPING = 0;//Гашение контрольной ленты
+    public static final int REPORT_TYPE_DAILY_DAMPING = 1;//Суточный отчет с гашением
+    public static final int REPORT_TYPE_DAILY = 2;//Суточный отчет без гашения
+    public static final int REPORT_TYPE_SECTIONS = 7;//Отчет по секциям
+
     private static final int TEXT_ALIGNMENT_LEFT = 0;
     private static final int TEXT_ALIGNMENT_CENTER = 1;
     private static final int TEXT_ALIGNMENT_RIGHT = 2;
@@ -17,10 +22,10 @@ public class Printer {
     private static final int TEXT_WRAP_LINE = 1;
     private static final int TEXT_WRAP_WORD = 2;
 
-    public static final int MODE_CHOICE = 0;
-    public static final int MODE_REGISTRATION = 1;
-    public static final int MODE_XREPORT = 2;
-    public static final int MODE_ZREPORT = 2;
+    public static final int MODE_CHOICE = 0;//Режим выбора
+    public static final int MODE_REGISTRATION = 1;//Режим регистрации
+    public static final int MODE_XREPORT = 2;//X-отчет
+    public static final int MODE_ZREPORT = 3;//Z-отчет
 
     private static final int CHECK_TYPE_CLOSED = 0;//Чек закрыт
     private static final int CHECK_TYPE_SALE = 1;// Чек продажи
@@ -176,6 +181,28 @@ public class Printer {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
                 return new PrintError(printer.printString(line, TEXT_WRAP_WORD, TEXT_ALIGNMENT_LEFT));
+            }
+        });
+    }
+
+    public PrintError report(final int reportType){
+        return perform(new PrinterAction() {
+            @Override
+            public PrintError run(IEcr printer) throws RemoteException {
+                return new PrintError(printer.report(
+                        reportType,
+                        0/*unused*/,
+                        0,
+                        true));
+            }
+        });
+    }
+
+    public PrintError disconnect() {
+        return perform(new PrinterAction() {
+            @Override
+            public PrintError run(IEcr printer) throws RemoteException {
+                return new PrintError(printer.enableDevice(false));
             }
         });
     }
