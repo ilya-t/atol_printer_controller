@@ -264,4 +264,19 @@ public class Printer {
     public DeviceSettings getDeviceSettings(){
         return DeviceSettings.getInstance(this);
     }
+
+    public int getMode() {
+        final int[] mode = new int[1];
+        if (
+        perform(new PrinterAction() {
+            @Override
+            public PrintError run(IEcr printer) throws RemoteException {
+                mode[0] = printer.mode();
+                return new PrintError(DefaultPrintError.SUCCESS);
+            }
+        }).isClear()){
+            return mode[0];
+        }
+        return -1;
+    }
 }
