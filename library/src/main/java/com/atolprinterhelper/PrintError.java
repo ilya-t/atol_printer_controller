@@ -209,4 +209,8 @@ public class PrintError {
     public String getErrorDesc() {
         return errorDesc;
     }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
 }
