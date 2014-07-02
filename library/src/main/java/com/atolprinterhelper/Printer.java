@@ -5,9 +5,12 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.os.RemoteException;
 
 import com.atol.services.ecrservice.IEcr;
+
+import java.util.List;
 
 public class Printer {
     public static final int REPORT_TYPE_TAPE_DAMPING = 0;//Гашение контрольной ленты
@@ -46,6 +49,7 @@ public class Printer {
     private static final int REQUEST_CODE = 38921;
     private static final String PREFERENCES_FILE = "atol_device_settings";
     private static final String PREFS_DEVICE_SETTINGS = "deviceSettings";
+    private final static String DRIVER_PACKAGE_NAME = "com.atol.services.ecrservice";
     final Context context;
 
     private SharedPreferences preferences;
@@ -63,10 +67,12 @@ public class Printer {
     }
 
     public void configure(Activity activity) {
-        Intent intent = new Intent();
-        intent.setComponent(new ComponentName("com.atol.services.ecrservice", "com.atol.services.ecrservice.settings.SettingsActivity"));
-        activity.startActivityForResult(intent, REQUEST_CODE);
-        isConfiguring = true;
+        if (isDriverInstalled(activity)){
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName(DRIVER_PACKAGE_NAME, "com.atol.services.ecrservice.settings.SettingsActivity"));
+            activity.startActivityForResult(intent, REQUEST_CODE);
+            isConfiguring = true;
+        }
     }
 
     public boolean isConnected() {
@@ -278,5 +284,18 @@ public class Printer {
             return mode[0];
         }
         return -1;
+    }
+
+    public static boolean isDriverInstalled(Context context){
+        if (context != null && context.getPackageManager() != null){
+            List<PackageInfo> packageList = context.getPackageManager().getInstalledPackages(0);
+
+            for (PackageInfo packageInfo : packageList){
+                if (packageInfo.packageName.equals(DRIVER_PACKAGE_NAME)){
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
