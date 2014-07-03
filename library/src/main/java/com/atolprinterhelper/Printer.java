@@ -66,12 +66,15 @@ public class Printer {
         preferences = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
     }
 
-    public void configure(Activity activity) {
+    public boolean configure(Activity activity) {
         if (isDriverInstalled(activity)){
             Intent intent = new Intent();
             intent.setComponent(new ComponentName(DRIVER_PACKAGE_NAME, "com.atol.services.ecrservice.settings.SettingsActivity"));
             activity.startActivityForResult(intent, REQUEST_CODE);
             isConfiguring = true;
+            return true;
+        }else{
+            return false;
         }
     }
 
