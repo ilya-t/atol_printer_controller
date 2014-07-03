@@ -53,7 +53,7 @@ public class Printer {
     final Context context;
 
     private SharedPreferences preferences;
-    private boolean isConfiguring;
+    private static boolean isConfiguring;
 
     public Printer(Context context) {
         this.context = context;
@@ -66,7 +66,7 @@ public class Printer {
         preferences = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
     }
 
-    public boolean configure(Activity activity) {
+    public static boolean configure(Activity activity) {
         if (isDriverInstalled(activity)){
             Intent intent = new Intent();
             intent.setComponent(new ComponentName(DRIVER_PACKAGE_NAME, "com.atol.services.ecrservice.settings.SettingsActivity"));
@@ -76,6 +76,10 @@ public class Printer {
         }else{
             return false;
         }
+    }
+
+    public boolean isServiceConnected(){
+        return sc.isConnected();
     }
 
     public boolean isConnected() {
@@ -241,7 +245,11 @@ public class Printer {
         });
     }
 
-    void onServiceConnected() {
+    public void disconnectService(){
+        sc.unbindService();
+    }
+
+    protected void  onServiceConnected() {
         if (getStoredSettings().equals("")){
             saveDeviceSettings();
         }else{
