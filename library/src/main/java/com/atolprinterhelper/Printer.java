@@ -180,6 +180,15 @@ public class Printer {
                     }
                 }
 
+
+                if (cashCheck.getDiscount() > 0){
+                    errorCode = printer.printString(
+                            context.getString(R.string.check_discount)+" "+
+                                    String.valueOf(cashCheck.getDiscount())+"%",TEXT_WRAP_WORD, TEXT_ALIGNMENT_LEFT);
+                    if (errorCode != DefaultPrintError.SUCCESS.code){
+                        return new PrintError(errorCode);
+                    }
+                }
                 cashCheck.setCheckNumber(printer.checkNumber());
 
                 errorCode = printer.closeCheck(cashCheck.getPaymentType().getTypeId());
@@ -308,5 +317,19 @@ public class Printer {
             }
         }
         return false;
+    }
+
+    public boolean isSessionOpened() {
+        final boolean[] result = new boolean[1];
+        perform(
+                new PrinterAction() {
+                    @Override
+                    public PrintError run(IEcr printer) throws RemoteException {
+                        result[0] = printer.isSessionOpened();
+                        return new PrintError(DefaultPrintError.SUCCESS);
+                    }
+                });
+        
+        return result[0];
     }
 }

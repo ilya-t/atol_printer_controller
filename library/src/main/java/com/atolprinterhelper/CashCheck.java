@@ -9,6 +9,7 @@ public class CashCheck {
     private PaymentType paymentType;
     private List<CheckItem> itemList = new ArrayList<>();
     private int checkNumber;
+    private int discount;
 
     public CashCheck(PaymentType paymentType) {
         this.paymentType = paymentType;
@@ -41,5 +42,13 @@ public class CashCheck {
 
     public int getCheckNumber() {
         return checkNumber;
+    }
+
+    public void setDiscount(int discount) {
+        this.discount = discount;
+    }
+
+    public int getDiscount() {
+        return discount;
     }
 }
