@@ -165,6 +165,16 @@ public class Printer {
                     return new PrintError(errorCode);
                 }
 
+                float commonDiscount = cashCheck.getItemList().get(0).getDiscount();
+
+                for (CheckItem checkItem : cashCheck.getItemList()){
+                    if (commonDiscount != checkItem.getDiscount()){
+                        commonDiscount = 0f;
+                        break;
+                    }
+                }
+
+
 
                 for (CheckItem checkItem : cashCheck.getItemList()){
                     errorCode = printer.registration(
@@ -178,13 +188,21 @@ public class Printer {
                     if (errorCode != DefaultPrintError.SUCCESS.code){
                         return new PrintError(errorCode);
                     }
+
+                    if (checkItem.getDiscount() > 0f && Float.compare(commonDiscount, 0f) == 0){
+                        errorCode = printer.printString("( "+context.getString(R.string.check_item_discount)+" "+String.valueOf(checkItem.getDiscount())+"%)",
+                                                        TEXT_WRAP_WORD,TEXT_ALIGNMENT_RIGHT);
+                        if (errorCode != DefaultPrintError.SUCCESS.code){
+                            return new PrintError(errorCode);
+                        }
+                    }
                 }
 
 
-                if (cashCheck.getDiscount() > 0){
+                if (commonDiscount > 0f){
                     errorCode = printer.printString(
                             context.getString(R.string.check_discount)+" "+
-                                    String.valueOf(cashCheck.getDiscount())+"%",TEXT_WRAP_WORD, TEXT_ALIGNMENT_LEFT);
+                                    String.valueOf(commonDiscount)+"%",TEXT_WRAP_WORD, TEXT_ALIGNMENT_LEFT);
                     if (errorCode != DefaultPrintError.SUCCESS.code){
                         return new PrintError(errorCode);
                     }

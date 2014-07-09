@@ -5,6 +5,7 @@ public class CheckItem {
     private int department;
     private double quantity;
     private double price;
+    private float discount = 0f;
 
     public CheckItem(String title, double quantity, double price) throws IllegalArgumentException{
         this.title = title;
@@ -38,5 +39,13 @@ public class CheckItem {
 
     public double getPrice() {
         return price;
+    }
+
+    public float getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(float discount) {
+        this.discount = discount;
     }
 }

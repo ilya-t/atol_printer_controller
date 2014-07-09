@@ -1,3 +1,4 @@
 <resources>
     <string name="check_discount">Итоговая стоимость указана с учетом скидки </string>
+    <string name="check_item_discount">с учетом скидки</string>
 </resources>
