@@ -10,6 +10,8 @@ import android.os.RemoteException;
 
 import com.atol.services.ecrservice.IEcr;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class Printer {
@@ -207,6 +209,7 @@ public class Printer {
                         return new PrintError(errorCode);
                     }
                 }
+                cashCheck.setCheckTime(printer.dateTime());
                 cashCheck.setCheckNumber(printer.checkNumber());
 
                 errorCode = printer.closeCheck(cashCheck.getPaymentType().getTypeId());

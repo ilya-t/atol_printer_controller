@@ -1,6 +1,9 @@
 package com.atolprinterhelper;
 
+import com.atol.services.ecrservice.ParcelableDate;
+
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class CashCheck {
@@ -9,6 +12,7 @@ public class CashCheck {
     private PaymentType paymentType;
     private List<CheckItem> itemList = new ArrayList<>();
     private int checkNumber;
+    private Date checkTime;
 
     public CashCheck(PaymentType paymentType) {
         this.paymentType = paymentType;
@@ -41,5 +45,13 @@ public class CashCheck {
 
     public int getCheckNumber() {
         return checkNumber;
+    }
+
+    public Date getCheckTime() {
+        return checkTime;
+    }
+
+    void setCheckTime(ParcelableDate checkTime) {
+        this.checkTime = checkTime;
     }
 }

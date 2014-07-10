@@ -4,6 +4,8 @@ import android.os.RemoteException;
 
 import com.atol.services.ecrservice.IEcr;
 
+import java.util.Date;
+
 public class DeviceSettings {
     public final static int CONNECTION_BASIC = 1;//обычное подключение
     public final static int CONNECTION_UNSAFE = 2;//небезопасное подключение
@@ -19,6 +21,7 @@ public class DeviceSettings {
     private int connectionType;
 
     private String serialNumber;
+    private Date dateTime;
 
     static DeviceSettings getInstance(Printer printer){
         final DeviceSettings deviceSettings = new DeviceSettings();
@@ -38,6 +41,7 @@ public class DeviceSettings {
                     e.printStackTrace();
                 }
                 deviceSettings.serialNumber = printer.serialNumber();
+                deviceSettings.dateTime = printer.dateTime();
 
                 return new PrintError(DefaultPrintError.SUCCESS);
             }
@@ -87,5 +91,9 @@ public class DeviceSettings {
 
     public String getSerialNumber() {
         return serialNumber;
+    }
+
+    public Date getDateTime() {
+        return dateTime;
     }
 }
