@@ -41,10 +41,19 @@ public class Printer {
     private static final int CHECK_TYPE_PURCHASE_REFUND = 5;// Чек возврата покупки
     private static final int CHECK_TYPE_PURCHASE_CANCEL = 6;// Чек аннулирования покупки
 
-    static final int PAYMENT_TYPE_CASH = 0;
-    static final int PAYMENT_TYPE_CREDIT = 1;
-    static final int PAYMENT_TYPE_PACKAGE = 2;
-    static final int PAYMENT_TYPE_CARD = 3;
+    //default payment types
+    public static final int PAYMENT_TYPE_CASH = 0;
+    public static final int PAYMENT_TYPE_CREDIT = 1;
+    public static final int PAYMENT_TYPE_PACKAGE = 2;
+    public static final int PAYMENT_TYPE_CARD = 3;
+    //custom payment types
+    public static final int PAYMENT_TYPE_4 = 4;
+    public static final int PAYMENT_TYPE_5 = 5;
+    public static final int PAYMENT_TYPE_6 = 6;
+    public static final int PAYMENT_TYPE_7 = 7;
+    public static final int PAYMENT_TYPE_8 = 8;
+    public static final int PAYMENT_TYPE_9 = 9;
+    public static final int PAYMENT_TYPE_10 = 10;
 
 
     private final PrinterServiceController sc;
@@ -176,9 +185,16 @@ public class Printer {
                     }
                 }
 
-
+                errorCode = printLines(printer, cashCheck.getHeaders());
+                if (errorCode != DefaultPrintError.SUCCESS.code){
+                    return new PrintError(errorCode);
+                }
 
                 for (CheckItem checkItem : cashCheck.getItemList()){
+                    errorCode = printLines(printer, checkItem.getHeaders());
+                    if (errorCode != DefaultPrintError.SUCCESS.code){
+                        return new PrintError(errorCode);
+                    }
                     errorCode = printer.registration(
                                         checkItem.getTitle(),
                                         TEXT_WRAP_WORD,
@@ -212,13 +228,26 @@ public class Printer {
                 cashCheck.setCheckTime(printer.dateTime());
                 cashCheck.setCheckNumber(printer.checkNumber());
 
-                errorCode = printer.closeCheck(cashCheck.getPaymentType().getTypeId());
+                errorCode = printer.closeCheck(cashCheck.getPaymentType());
                 if (errorCode != DefaultPrintError.SUCCESS.code){
                     return new PrintError(errorCode);
                 }
                 return new PrintError(DefaultPrintError.SUCCESS);
             }
         });
+    }
+
+    private int printLines(IEcr printer, List<String> lines) throws RemoteException {
+        if (lines != null){
+            for (String line : lines){
+                int errorCode = printer.printString(line, TEXT_WRAP_WORD, TEXT_ALIGNMENT_LEFT);
+                if (errorCode != DefaultPrintError.SUCCESS.code){
+                    return errorCode;
+                }
+            }
+        }
+
+        return DefaultPrintError.SUCCESS.code;
     }
 
     PrintError perform(PrinterAction action){

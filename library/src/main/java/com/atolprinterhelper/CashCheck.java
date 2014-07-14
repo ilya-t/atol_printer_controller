@@ -9,12 +9,13 @@ import java.util.List;
 public class CashCheck {
     private static final double MAX_TOTAL = 40*1000*1000;
 
-    private PaymentType paymentType;
+    private int paymentType;
     private List<CheckItem> itemList = new ArrayList<>();
+    private List<String> headers;
     private int checkNumber;
     private Date checkTime;
 
-    public CashCheck(PaymentType paymentType) {
+    public CashCheck(int paymentType) {
         this.paymentType = paymentType;
     }
 
@@ -39,7 +40,7 @@ public class CashCheck {
         return new PrintError(DefaultPrintError.SUCCESS);
     }
 
-    public PaymentType getPaymentType() {
+    public int getPaymentType() {
         return paymentType;
     }
 
@@ -53,5 +54,13 @@ public class CashCheck {
 
     void setCheckTime(ParcelableDate checkTime) {
         this.checkTime = checkTime;
+    }
+
+    public void setHeaders(List<String> headers) {
+        this.headers = headers;
+    }
+
+    List<String> getHeaders() {
+        return headers;
     }
 }

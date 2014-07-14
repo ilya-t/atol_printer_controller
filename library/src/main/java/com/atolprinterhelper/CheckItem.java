@@ -1,6 +1,9 @@
 package com.atolprinterhelper;
 
+import java.util.List;
+
 public class CheckItem {
+    private List<String> headers;
     private String title;
     private int department;
     private double quantity;
@@ -47,5 +50,13 @@ public class CheckItem {
 
     public void setDiscount(float discount) {
         this.discount = discount;
+    }
+
+    public void setHeaders(List<String> headers) {
+        this.headers = headers;
+    }
+
+    List<String> getHeaders() {
+        return headers;
     }
 }
