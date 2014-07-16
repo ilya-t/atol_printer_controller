@@ -8,6 +8,7 @@ import java.util.List;
 
 public class CashCheck {
     private static final double MAX_TOTAL = 40*1000*1000;
+    private static final int ERROR_CODE_WRONG_SUM = 18;
 
     private int paymentType;
     private List<CheckItem> itemList = new ArrayList<>();
@@ -34,7 +35,7 @@ public class CashCheck {
         }
 
         if (totalSum > MAX_TOTAL){
-            return new PrintError("Некорректная итоговая сумма - "+ String.valueOf(totalSum));
+            return new PrintError(ERROR_CODE_WRONG_SUM, "Некорректная итоговая сумма - "+ String.valueOf(totalSum));
         }
 
         return new PrintError(DefaultPrintError.SUCCESS);

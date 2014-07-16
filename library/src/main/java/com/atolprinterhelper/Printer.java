@@ -10,8 +10,6 @@ import android.os.RemoteException;
 
 import com.atol.services.ecrservice.IEcr;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 public class Printer {
@@ -269,7 +267,7 @@ public class Printer {
             return action.run(sc.getPrinterInterface());
         } catch (RemoteException e) {
             e.printStackTrace();
-            return new PrintError(e.toString());
+            return new PrintError(DefaultPrintError.FAIL.code, e.toString());
         }
     }
 

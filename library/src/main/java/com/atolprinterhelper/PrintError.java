@@ -7,6 +7,7 @@ public class PrintError {
 
     private int errorCode;
     private String errorDesc;
+
     public PrintError(int code){
         this.errorCode = code;
         errorDesc = errorList.get(code);
@@ -22,6 +23,11 @@ public class PrintError {
     }
 
     private static SparseArray<String> errorList;
+
+    public PrintError(int code, String description) {
+        errorCode = code;
+        errorDesc = description;
+    }
 
     static {
         errorList = new SparseArray<>();
@@ -195,11 +201,6 @@ public class PrintError {
         errorList.append(-3968,"Ошибка питания");
         errorList.append(-3969,"Сумма налога больше суммы регистрациий по чеку и/или итога");
         errorList.append(-3970,"Начисление налога на последнюю операцию невозможно");
-    }
-
-    public PrintError(String description) {
-        errorCode = DefaultPrintError.FAIL.code;
-        errorDesc = description;
     }
 
     public boolean isClear(){
