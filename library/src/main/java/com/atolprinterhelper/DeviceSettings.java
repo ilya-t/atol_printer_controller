@@ -22,10 +22,11 @@ public class DeviceSettings {
 
     private String serialNumber;
     private Date dateTime;
+    private PrintError error;
 
     static DeviceSettings getInstance(Printer printer){
         final DeviceSettings deviceSettings = new DeviceSettings();
-        printer.perform(new PrinterAction() {
+        PrintError error = printer.perform(new PrinterAction() {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
                 deviceSettings.transport = printer.deviceSetting("transport");
@@ -40,13 +41,41 @@ public class DeviceSettings {
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
-                printer.setMode(Printer.MODE_CHOICE);
+                int errorCode;
+                if (!printer.isDeviceEnabled()){
+                    errorCode = printer.enableDevice(true);
+                    if (errorCode != DefaultPrintError.SUCCESS.code) {
+                        return new PrintError(errorCode);
+                    }
+                }
+
                 deviceSettings.serialNumber = printer.serialNumber();
+
+                if (deviceSettings.serialNumber == null){
+                    errorCode = printer.setMode(Printer.MODE_CHOICE);
+
+                    if (errorCode != DefaultPrintError.SUCCESS.code) {
+                        return new PrintError(errorCode);
+                    }
+
+                    errorCode = printer.updateStatus();
+                    if (errorCode != DefaultPrintError.SUCCESS.code) {
+                        return new PrintError(errorCode);
+                    }
+                    deviceSettings.serialNumber = printer.serialNumber();
+                }
+
+
                 deviceSettings.dateTime = printer.dateTime();
 
-                return new PrintError(DefaultPrintError.SUCCESS);
+                deviceSettings.setError(new PrintError(DefaultPrintError.SUCCESS));
+                return deviceSettings.getError();
             }
         });
+
+        if (error.getErrorCode() != DefaultPrintError.SUCCESS.code){
+            deviceSettings.setError(error);
+        }
 
         return deviceSettings;
 
@@ -96,5 +125,13 @@ public class DeviceSettings {
 
     public Date getDateTime() {
         return dateTime;
+    }
+
+    public void setError(PrintError error) {
+        this.error = error;
+    }
+
+    public PrintError getError() {
+        return error;
     }
 }
