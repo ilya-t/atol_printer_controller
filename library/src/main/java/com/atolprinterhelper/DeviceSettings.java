@@ -40,6 +40,7 @@ public class DeviceSettings {
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
+                printer.setMode(Printer.MODE_CHOICE);
                 deviceSettings.serialNumber = printer.serialNumber();
                 deviceSettings.dateTime = printer.dateTime();
 
