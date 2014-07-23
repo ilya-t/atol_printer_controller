@@ -10,6 +10,7 @@ import android.os.RemoteException;
 
 import com.atol.services.ecrservice.IEcr;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class Printer {
@@ -379,5 +380,23 @@ public class Printer {
                 });
         
         return result[0];
+    }
+
+    public String getDividerLine(final char divider) {
+        final String[] line = new String[1];
+        perform(new PrinterAction() {
+            @Override
+            public PrintError run(IEcr printer) throws RemoteException {
+                line[0] = "";
+                int length = printer.charLineLength();
+                char[] array = new char[length];
+                Arrays.fill(array, divider);
+                line[0] = new String(array);
+                return new PrintError(DefaultPrintError.SUCCESS);
+            }
+        });
+
+        return line[0];
+
     }
 }
