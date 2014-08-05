@@ -59,7 +59,6 @@ public class Printer {
     private static final int REQUEST_CODE = 38921;
     private static final String PREFERENCES_FILE = "atol_device_settings";
     private static final String PREFS_DEVICE_SETTINGS = "deviceSettings";
-    private final static String DRIVER_PACKAGE_NAME = "com.atol.services.ecrservice";
     final Context context;
 
     private SharedPreferences preferences;
@@ -79,7 +78,7 @@ public class Printer {
     public static boolean configure(Activity activity) {
         if (isDriverInstalled(activity)){
             Intent intent = new Intent();
-            intent.setComponent(new ComponentName(DRIVER_PACKAGE_NAME, "com.atol.services.ecrservice.settings.SettingsActivity"));
+            intent.setComponent(new ComponentName(PrinterServiceController.SERVICE_PACKAGE_NAME, PrinterServiceController.SERVICE_PACKAGE_NAME +".settings.SettingsActivity"));
             activity.startActivityForResult(intent, REQUEST_CODE);
             isConfiguring = true;
             return true;
@@ -305,6 +304,12 @@ public class Printer {
 
     public void disconnectService(){
         sc.unbindService();
+        sc.stopService();
+    }
+
+    public void forceStopService(){
+        sc.unbindService();
+        sc.forceStopService();
     }
 
     protected void  onServiceConnected() {
@@ -360,7 +365,7 @@ public class Printer {
             List<PackageInfo> packageList = context.getPackageManager().getInstalledPackages(0);
 
             for (PackageInfo packageInfo : packageList){
-                if (packageInfo.packageName.equals(DRIVER_PACKAGE_NAME)){
+                if (packageInfo.packageName.equals(PrinterServiceController.SERVICE_PACKAGE_NAME)){
                     return true;
                 }
             }
