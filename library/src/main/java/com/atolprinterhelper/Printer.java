@@ -128,6 +128,12 @@ public class Printer {
         });
     }
 
+    public void connectToService(){
+        if (!sc.isConnected()){
+            sc.startService();
+        }
+    }
+
     private String getStoredSettings() {
         return preferences.getString(PREFS_DEVICE_SETTINGS, "");
     }
@@ -307,6 +313,7 @@ public class Printer {
         sc.stopService();
     }
 
+    /** disconnects from service and kills service process*/
     public void forceStopService(){
         sc.unbindService();
         sc.forceStopService();
