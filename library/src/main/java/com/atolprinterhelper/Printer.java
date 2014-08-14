@@ -75,6 +75,7 @@ public class Printer {
         preferences = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
     }
 
+    /** launches Settings activity inside printer service app */
     public static boolean configure(Activity activity) {
         if (isDriverInstalled(activity)){
             Intent intent = new Intent();
@@ -87,6 +88,7 @@ public class Printer {
         }
     }
 
+    /** checks if connected to printer remote service app */
     public boolean isServiceConnected(){
         return sc.isConnected();
     }
@@ -299,6 +301,7 @@ public class Printer {
         });
     }
 
+    /** disconnects from printer device */
     public PrintError disconnect() {
         return perform(new PrinterAction() {
             @Override
@@ -308,6 +311,7 @@ public class Printer {
         });
     }
 
+    /** disconnects from service */
     public void disconnectService(){
         sc.unbindService();
         sc.stopService();
@@ -335,6 +339,7 @@ public class Printer {
         }
     }
 
+    /** saves current device settings on remote service to inner preferences file*/
     private void saveDeviceSettings() {
         perform(new PrinterAction() {
             @Override
@@ -367,6 +372,7 @@ public class Printer {
         return -1;
     }
 
+    /** checks if printer service package is installed */
     public static boolean isDriverInstalled(Context context){
         if (context != null && context.getPackageManager() != null){
             List<PackageInfo> packageList = context.getPackageManager().getInstalledPackages(0);
@@ -394,6 +400,7 @@ public class Printer {
         return result[0];
     }
 
+    /** @return divider line that fits check max width*/
     public String getDividerLine(final char divider) {
         final String[] line = new String[1];
         perform(new PrinterAction() {
