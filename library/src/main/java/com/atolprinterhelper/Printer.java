@@ -322,7 +322,12 @@ public class Printer {
 
     protected void onServiceConnected() {
         DeviceSettings deviceSettings = getDeviceSettings();
-        if (deviceSettings.isDeviceConfigured() && settingsContainer.getSettingsConfig().equals("")){
+        if (
+                deviceSettings.isDeviceConfigured() &&
+                (
+                        settingsContainer.getSettingsConfig() == null ||
+                        settingsContainer.getSettingsConfig().equals("")
+                )){
             settingsContainer.saveDeviceSettings(deviceSettings);
         }else{
             perform(new PrinterAction() {

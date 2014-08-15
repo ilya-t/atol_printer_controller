@@ -43,43 +43,36 @@ public class DeviceSettings {
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
-                int errorCode;
-                if (!printer.isDeviceEnabled()){
-                    errorCode = printer.enableDevice(true);
-                    if (errorCode != DefaultPrintError.SUCCESS.code) {
-                        return new PrintError(errorCode);
-                    }
-                }
 
                 deviceSettings.settingsConfig = printer.deviceSettings();
 
-                deviceSettings.serialNumber = printer.serialNumber();
-
-                if (deviceSettings.serialNumber == null){
-                    errorCode = printer.setMode(Printer.MODE_CHOICE);
-
-                    if (errorCode != DefaultPrintError.SUCCESS.code) {
-                        return new PrintError(errorCode);
-                    }
-
-                    errorCode = printer.updateStatus();
-                    if (errorCode != DefaultPrintError.SUCCESS.code) {
-                        return new PrintError(errorCode);
-                    }
+                if (printer.isDeviceEnabled()){
                     deviceSettings.serialNumber = printer.serialNumber();
+
+                    if (deviceSettings.serialNumber == null){
+                        int errorCode;
+                        errorCode = printer.setMode(Printer.MODE_CHOICE);
+
+                        if (errorCode != DefaultPrintError.SUCCESS.code) {
+                            return new PrintError(errorCode);
+                        }
+
+                        errorCode = printer.updateStatus();
+                        if (errorCode != DefaultPrintError.SUCCESS.code) {
+                            return new PrintError(errorCode);
+                        }
+                        deviceSettings.serialNumber = printer.serialNumber();
+                    }
+
+
+                    deviceSettings.dateTime = printer.dateTime();
                 }
 
-
-                deviceSettings.dateTime = printer.dateTime();
-
-                deviceSettings.setError(DefaultPrintError.SUCCESS.getError());
-                return deviceSettings.getError();
+                return DefaultPrintError.SUCCESS.getError();
             }
         });
 
-        if (error.getErrorCode() != DefaultPrintError.SUCCESS.code){
-            deviceSettings.setError(error);
-        }
+        deviceSettings.setError(error);
 
         return deviceSettings;
 
@@ -123,10 +116,12 @@ public class DeviceSettings {
         return connectionType;
     }
 
+    /** @return printer serial number if device is connected*/
     public String getSerialNumber() {
         return serialNumber;
     }
 
+    /** @return printer datetime if device is connected*/
     public Date getDateTime() {
         return dateTime;
     }
