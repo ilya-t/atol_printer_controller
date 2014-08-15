@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.os.RemoteException;
 
@@ -55,24 +54,28 @@ public class Printer {
     public static final int PAYMENT_TYPE_10 = 10;
 
 
-    private final PrinterServiceController sc;
+    private PrinterServiceController sc;
     private static final int REQUEST_CODE = 38921;
-    private static final String PREFERENCES_FILE = "atol_device_settings";
-    private static final String PREFS_DEVICE_SETTINGS = "deviceSettings";
     final Context context;
 
-    private SharedPreferences preferences;
+
+    private SettingsContainer settingsContainer;
     private static boolean isConfiguring;
 
     public Printer(Context context) {
         this.context = context;
+        settingsContainer = (this instanceof SettingsContainer)
+                                ?(SettingsContainer)this
+                                :new DefaultSettingsContainer(context);
+        init();
+    }
+
+    private void init() {
         sc = PrinterServiceController.newInstance(this);
 
         if (!sc.isConnected()){
             sc.startService();
         }
-
-        preferences = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
     }
 
     /** launches Settings activity inside printer service app */
@@ -119,7 +122,7 @@ public class Printer {
         return !printer.deviceSetting("deviceName").equals("") && !printer.deviceSetting("deviceAddress").equals("");
     }
 
-    public PrintError connect() {
+    public PrintError connectDevice() {
         return perform(new PrinterAction() {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
@@ -132,10 +135,6 @@ public class Printer {
         if (!sc.isConnected()){
             sc.startService();
         }
-    }
-
-    private String getStoredSettings() {
-        return preferences.getString(PREFS_DEVICE_SETTINGS, "");
     }
 
     public PrintError setMode(final int mode){
@@ -300,7 +299,7 @@ public class Printer {
     }
 
     /** disconnects from printer device */
-    public PrintError disconnect() {
+    public PrintError disconnectDevice() {
         return perform(new PrinterAction() {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
@@ -321,35 +320,40 @@ public class Printer {
         sc.forceStopService();
     }
 
-    protected void  onServiceConnected() {
-        if (getStoredSettings().equals("")){
-            saveDeviceSettings();
+    protected void onServiceConnected() {
+        DeviceSettings deviceSettings = getDeviceSettings();
+        if (deviceSettings.isDeviceConfigured() && settingsContainer.getSettingsConfig().equals("")){
+            settingsContainer.saveDeviceSettings(deviceSettings);
         }else{
             perform(new PrinterAction() {
                 @Override
                 public PrintError run(IEcr printer) throws RemoteException {
-                    if (!isDeviceConfigured(printer)){
-                        printer.setDeviceSettings(getStoredSettings());
+                    if (!isDeviceConfigured(printer)) {
+                        printer.setDeviceSettings(settingsContainer.getSettingsConfig());
                     }
-                    return null;
+                    return DefaultPrintError.SUCCESS.getError();
                 }
             });
         }
     }
 
-    /** saves current device settings on remote service to inner preferences file*/
-    private void saveDeviceSettings() {
-        perform(new PrinterAction() {
+    public PrintError applyDeviceSettings(final String deviceSettings) {
+        return perform(new PrinterAction() {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putString(PREFS_DEVICE_SETTINGS, printer.deviceSettings());
-                editor.apply();
-                return new PrintError(DefaultPrintError.SUCCESS);
+                printer.setDeviceSettings(deviceSettings);
+                return DefaultPrintError.SUCCESS.getError();
             }
         });
     }
 
+    /** saves current device settings on remote service to inner preferences file*/
+    private void saveDeviceSettings() {
+        DeviceSettings deviceSettings = getDeviceSettings();
+        if (deviceSettings.getError().isClear()){
+            settingsContainer.saveDeviceSettings(deviceSettings);
+        }
+    }
 
     public DeviceSettings getDeviceSettings(){
         return DeviceSettings.getInstance(this);

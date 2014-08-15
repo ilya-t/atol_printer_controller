@@ -20,6 +20,8 @@ public class DeviceSettings {
     private String accessPassword;
     private int connectionType;
 
+    private String settingsConfig;
+
     private String serialNumber;
     private Date dateTime;
     private PrintError error;
@@ -48,6 +50,8 @@ public class DeviceSettings {
                         return new PrintError(errorCode);
                     }
                 }
+
+                deviceSettings.settingsConfig = printer.deviceSettings();
 
                 deviceSettings.serialNumber = printer.serialNumber();
 
@@ -133,5 +137,15 @@ public class DeviceSettings {
 
     public PrintError getError() {
         return error;
+    }
+
+    public String getSettingsConfig() {
+        return settingsConfig;
+    }
+
+    public boolean isDeviceConfigured() {
+        return error.isClear() &&
+               deviceName != null && !deviceName.equals("") &&
+               deviceAddress != null && !deviceAddress.equals("");
     }
 }
