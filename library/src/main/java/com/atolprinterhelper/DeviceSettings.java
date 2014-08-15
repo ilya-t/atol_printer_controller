@@ -26,7 +26,7 @@ public class DeviceSettings {
     private Date dateTime;
     private PrintError error;
 
-    static DeviceSettings getInstance(Printer printer){
+    static DeviceSettings getInstance(Printer printer, final boolean includeDeviceInfo){
         final DeviceSettings deviceSettings = new DeviceSettings();
         PrintError error = printer.perform(new PrinterAction() {
             @Override
@@ -46,7 +46,7 @@ public class DeviceSettings {
 
                 deviceSettings.settingsConfig = printer.deviceSettings();
 
-                if (printer.isDeviceEnabled()){
+                if (includeDeviceInfo && printer.isDeviceEnabled()){
                     deviceSettings.serialNumber = printer.serialNumber();
 
                     if (deviceSettings.serialNumber == null){

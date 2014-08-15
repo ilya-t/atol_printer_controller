@@ -321,7 +321,7 @@ public class Printer {
     }
 
     protected void onServiceConnected() {
-        DeviceSettings deviceSettings = getDeviceSettings();
+        DeviceSettings deviceSettings = DeviceSettings.getInstance(this, false);
         if (
                 deviceSettings.isDeviceConfigured() &&
                 (
@@ -361,7 +361,7 @@ public class Printer {
     }
 
     public DeviceSettings getDeviceSettings(){
-        return DeviceSettings.getInstance(this);
+        return DeviceSettings.getInstance(this, true);
     }
 
     public int getMode() {
