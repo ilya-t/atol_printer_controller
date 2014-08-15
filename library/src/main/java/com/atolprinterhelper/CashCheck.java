@@ -38,7 +38,7 @@ public class CashCheck {
             return new PrintError(ERROR_CODE_WRONG_SUM, "Некорректная итоговая сумма - "+ String.valueOf(totalSum));
         }
 
-        return new PrintError(DefaultPrintError.SUCCESS);
+        return DefaultPrintError.SUCCESS.getError();
     }
 
     public int getPaymentType() {

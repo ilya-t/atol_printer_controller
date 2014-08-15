@@ -97,10 +97,9 @@ public class Printer {
         return perform(new PrinterAction() {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
-                return new PrintError(
-                                        printer.isDeviceEnabled()
-                                        ? DefaultPrintError.SUCCESS
-                                        : DefaultPrintError.FAIL);
+                return printer.isDeviceEnabled()
+                        ?DefaultPrintError.SUCCESS.getError()
+                        :DefaultPrintError.FAIL.getError();
             }
         }).isClear();
     }
@@ -109,10 +108,9 @@ public class Printer {
         return perform(new PrinterAction() {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
-                return new PrintError(
-                        isDeviceConfigured(printer)
-                                ? DefaultPrintError.SUCCESS
-                                : DefaultPrintError.FAIL);
+                return isDeviceConfigured(printer)
+                                ? DefaultPrintError.SUCCESS.getError()
+                                : DefaultPrintError.FAIL.getError();
             }
         }).isClear();
     }
@@ -238,7 +236,7 @@ public class Printer {
                 if (errorCode != DefaultPrintError.SUCCESS.code){
                     return new PrintError(errorCode);
                 }
-                return new PrintError(DefaultPrintError.SUCCESS);
+                return DefaultPrintError.SUCCESS.getError();
             }
         });
     }
@@ -259,11 +257,11 @@ public class Printer {
     PrintError perform(PrinterAction action){
         if (!sc.isConnected()){
             sc.startService();
-            return new PrintError(DefaultPrintError.SERVICE_CONNECTION);
+            return DefaultPrintError.SERVICE_CONNECTION.getError();
         }
 
         if (sc.getPrinterInterface() == null){
-            return new PrintError(DefaultPrintError.EMPTY_INTERFACE);
+            return DefaultPrintError.EMPTY_INTERFACE.getError();
         }
 
         if (isConfiguring){
@@ -364,7 +362,7 @@ public class Printer {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
                 mode[0] = printer.mode();
-                return new PrintError(DefaultPrintError.SUCCESS);
+                return DefaultPrintError.SUCCESS.getError();
             }
         }).isClear()){
             return mode[0];
@@ -393,7 +391,7 @@ public class Printer {
                     @Override
                     public PrintError run(IEcr printer) throws RemoteException {
                         result[0] = printer.isSessionOpened();
-                        return new PrintError(DefaultPrintError.SUCCESS);
+                        return DefaultPrintError.SUCCESS.getError();
                     }
                 });
         
@@ -411,7 +409,7 @@ public class Printer {
                 char[] array = new char[length];
                 Arrays.fill(array, divider);
                 line[0] = new String(array);
-                return new PrintError(DefaultPrintError.SUCCESS);
+                return DefaultPrintError.SUCCESS.getError();
             }
         });
 
