@@ -6,12 +6,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class CashCheck {
+public class CashCheck<T extends CheckItem> {
     private static final double MAX_TOTAL = 40*1000*1000;
     private static final int ERROR_CODE_WRONG_SUM = 18;
 
     private int paymentType;
-    private List<CheckItem> itemList = new ArrayList<>();
+    private List<T> itemList = new ArrayList<>();
     private List<String> headers;
     private int checkNumber;
     private Date checkTime;
@@ -20,7 +20,7 @@ public class CashCheck {
         this.paymentType = paymentType;
     }
 
-    public List<CheckItem> getItemList() {
+    public List<T> getItemList() {
         return itemList;
     }
 

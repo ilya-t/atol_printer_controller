@@ -164,7 +164,7 @@ public class Printer {
         });
     }
 
-    public PrintError printCheck(final CashCheck cashCheck){
+    public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck){
         return perform(new PrinterAction() {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
