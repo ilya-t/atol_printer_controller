@@ -2,6 +2,8 @@ package com.atolprinterhelper;
 
 import android.util.SparseArray;
 
+import java.lang.ref.SoftReference;
+
 public class PrintError {
 
 
@@ -10,6 +12,18 @@ public class PrintError {
 
     public PrintError(int code){
         this.errorCode = code;
+
+        SparseArray<String> errorList = null;
+
+        if (errorListReference != null){
+            errorList = errorListReference.get();
+        }
+
+        if (errorList == null){
+            errorList = generateErrorList();
+            errorListReference = new SoftReference<>(errorList);
+        }
+
         errorDesc = errorList.get(code);
 
         if (errorDesc == null){
@@ -22,15 +36,15 @@ public class PrintError {
         this.errorDesc = error.description;
     }
 
-    private static SparseArray<String> errorList;
+    private static SoftReference<SparseArray<String>> errorListReference;
 
     public PrintError(int code, String description) {
         errorCode = code;
         errorDesc = description;
     }
 
-    static {
-        errorList = new SparseArray<>();
+    private SparseArray<String> generateErrorList() {
+        SparseArray<String> errorList = new SparseArray<>();
         errorList.append(0, "Ошибок нет");
         errorList.append(-1, "Нет связи");
         errorList.append(-3, "Порт недоступен");
@@ -201,6 +215,7 @@ public class PrintError {
         errorList.append(-3968,"Ошибка питания");
         errorList.append(-3969,"Сумма налога больше суммы регистрациий по чеку и/или итога");
         errorList.append(-3970,"Начисление налога на последнюю операцию невозможно");
+        return errorList;
     }
 
     public boolean isClear(){
