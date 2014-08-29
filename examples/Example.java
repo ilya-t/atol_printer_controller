@@ -19,7 +19,7 @@ public class Example {
         if (printer.isConnected()){
             printer.printString(DateFormat.getInstance().format(Calendar.getInstance().getTime()) + " : print test");
 
-            CashCheck check = new CashCheck(PaymentType.CASH);
+            CashCheck<CheckItem> check = new CashCheck(PaymentType.CASH.getTypeId());
 
             check.getItemList().addAll(Arrays.asList(
                     new CheckItem("Potato", 1, 80),

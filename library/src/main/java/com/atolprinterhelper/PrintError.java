@@ -62,6 +62,7 @@ public class PrintError {
         errorList.append(-15, "Некорректные данные от устроийства");
         errorList.append(-16, "Не поддерживается в данном режиме устроийства");
         errorList.append(-17, "Нет больше элементов отчета");
+        errorList.append(-18, "Неизвестная ошибка (OutOfMemoryError)");
         errorList.append(-19, "Нет доступа к ключу реестра");
         errorList.append(-199, "Описание ошибки недоступно");
         errorList.append(-3800,"В ККМ нет денег для выплаты");

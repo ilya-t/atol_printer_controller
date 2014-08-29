@@ -253,7 +253,7 @@ public class Printer {
         return DefaultPrintError.SUCCESS.code;
     }
 
-    PrintError perform(PrinterAction action){
+    protected PrintError perform(PrinterAction action){
         if (!sc.isConnected()){
             sc.startService();
             return DefaultPrintError.SERVICE_CONNECTION.getError();
@@ -271,6 +271,9 @@ public class Printer {
         try {
             return action.run(sc.getPrinterInterface());
         } catch (RemoteException e) {
+            e.printStackTrace();
+            return new PrintError(DefaultPrintError.FAIL.code, e.toString());
+        } catch (Exception e) {
             e.printStackTrace();
             return new PrintError(DefaultPrintError.FAIL.code, e.toString());
         }
