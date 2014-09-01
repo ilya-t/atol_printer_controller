@@ -1,6 +1,6 @@
 package com.atolprinterhelper;
 
-enum DefaultPrintError {
+public enum DefaultPrintError {
     SUCCESS(0, ""),
     FAIL(1, "Неизвестная ошибка"),
     SERVICE_CONNECTION(2,"Не подключен к сервису"),

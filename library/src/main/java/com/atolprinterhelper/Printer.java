@@ -193,10 +193,16 @@ public class Printer {
                     return new PrintError(errorCode);
                 }
 
+                int count = 0;
                 for (CheckItem checkItem : cashCheck.getItemList()){
                     errorCode = printLines(printer, checkItem.getHeaders());
+
                     if (errorCode != DefaultPrintError.SUCCESS.code){
                         return new PrintError(errorCode);
+                    }
+
+                    if (count > 10){
+                        sleep();
                     }
                     errorCode = printer.registration(
                                         checkItem.getTitle(),
@@ -206,9 +212,11 @@ public class Printer {
                                         checkItem.getPrice(),
                                         checkItem.getDepartment());
 
+
                     if (errorCode != DefaultPrintError.SUCCESS.code){
                         return new PrintError(errorCode);
                     }
+                    count++;
 
                     if (checkItem.getDiscount() > 0f && Float.compare(commonDiscount, 0f) == 0){
                         errorCode = printer.printString("( "+context.getString(R.string.check_item_discount)+" "+String.valueOf(checkItem.getDiscount())+"%)",
@@ -236,6 +244,31 @@ public class Printer {
                     return new PrintError(errorCode);
                 }
                 return DefaultPrintError.SUCCESS.getError();
+            }
+
+            private void sleep() {
+    /*adding delay to for remote service process to evade such error:
+        com.atol.services.ecrservice E/Binder﹕ Caught an OutOfMemoryError from the binder stub implementation.
+        java.lang.OutOfMemoryError: pthread_create (stack size 16384 bytes) failed: Try again
+        at java.lang.VMThread.create(Native Method)
+        at java.lang.Thread.start(Thread.java:1029)
+        at java.util.concurrent.ThreadPoolExecutor.addWorker(ThreadPoolExecutor.java:920)
+        at java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1338)
+        at java.util.concurrent.AbstractExecutorService.submit(AbstractExecutorService.java:103)
+        at com.atol.services.ecrservice.TransportBluetooth.read(TransportBluetooth.java:114)
+        at com.atol.services.ecrservice.LowLevelProtocolAtol2.readWithTimeout(LowLevelProtocolAtol2.java:112)
+        at com.atol.services.ecrservice.LowLevelProtocolAtol2.query(LowLevelProtocolAtol2.java:260)
+        at com.atol.services.ecrservice.DriverAtol2.openCheck(DriverAtol2.java:682)
+        at com.atol.services.ecrservice.EcrImpl.openCheck(EcrImpl.java:378)
+        at com.atol.services.ecrservice.EcrImpl.registration(EcrImpl.java:523)
+        at com.atol.services.ecrservice.EcrImpl.registration(EcrImpl.java:458)
+        at com.atol.services.ecrservice.IEcr$Stub.onTransact(IEcr.java:512)
+    */
+                try {
+                    Thread.sleep(700);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
