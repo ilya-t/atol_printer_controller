@@ -43,6 +43,7 @@ public class PrintError {
         errorDesc = description;
     }
 
+    /** генерирует коды и описание ошибок в соотв. с документацией к драйверу ККМ*/
     private SparseArray<String> generateErrorList() {
         SparseArray<String> errorList = new SparseArray<>();
         errorList.append(0, "Ошибок нет");
