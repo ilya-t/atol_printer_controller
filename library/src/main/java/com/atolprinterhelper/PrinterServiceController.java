@@ -30,6 +30,8 @@ class PrinterServiceController implements ServiceConnection{
     public static PrinterServiceController newInstance(Printer printer){
         if (instance == null){
             instance = new PrinterServiceController(printer);
+        }else{
+            instance.printer = printer;
         }
         return instance;
     }

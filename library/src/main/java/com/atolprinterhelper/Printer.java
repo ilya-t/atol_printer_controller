@@ -8,6 +8,7 @@ import android.content.pm.PackageInfo;
 import android.os.RemoteException;
 
 import com.atol.services.ecrservice.IEcr;
+import com.atol.services.ecrservice.ParcelableDate;
 
 import java.util.Arrays;
 import java.util.List;
@@ -188,7 +189,13 @@ public class Printer {
                     return error;
                 }
 
-                int errorCode = printer.openCheck(checkType);;
+                int errorCode = printer.updateStatus();
+
+                if (errorCode != DefaultPrintError.SUCCESS.code){
+                    return new PrintError(errorCode);
+                }
+
+                errorCode = printer.openCheck(checkType);
 
                 if (errorCode != DefaultPrintError.SUCCESS.code){
                     return new PrintError(errorCode);
@@ -308,13 +315,15 @@ public class Printer {
                         return new PrintError(errorCode);
                     }
                 }
-                cashCheck.setCheckTime(printer.dateTime());
-                cashCheck.setCheckNumber(printer.checkNumber());
+                ParcelableDate checkTime = printer.dateTime();
+                int checkId = printer.checkNumber();
 
                 errorCode = printer.closeCheck(cashCheck.getPaymentType());
                 if (errorCode != DefaultPrintError.SUCCESS.code){
                     return new PrintError(errorCode);
                 }
+                cashCheck.setCheckTime(checkTime);
+                cashCheck.setCheckNumber(checkId);
                 return DefaultPrintError.SUCCESS.getError();
             }
         });
@@ -534,88 +543,13 @@ public class Printer {
 
     }
 
-    public PrintError printRefund(final CashCheck<? extends CheckItem> cashCheck){
+    public PrintError updateStatus() {
         return perform(new PrinterAction() {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
-                PrintError error = cashCheck.verify();
-                if (!error.isClear()){
-                    return error;
-                }
-
-                int errorCode = printer.openCheck(CHECK_TYPE_REFUND);
-
-
-                if (errorCode != DefaultPrintError.SUCCESS.code){
-                    return new PrintError(errorCode);
-                }
-
-                float commonDiscount = cashCheck.getItemList().get(0).getDiscount();
-
-                for (CheckItem checkItem : cashCheck.getItemList()){
-                    if (commonDiscount != checkItem.getDiscount()){
-                        commonDiscount = 0f;
-                        break;
-                    }
-                }
-
-                errorCode = printLines(printer, cashCheck.getHeaders());
-                if (errorCode != DefaultPrintError.SUCCESS.code){
-                    return new PrintError(errorCode);
-                }
-
-                int count = 0;
-                for (CheckItem checkItem : cashCheck.getItemList()){
-                    errorCode = printLines(printer, checkItem.getHeaders());
-
-                    if (errorCode != DefaultPrintError.SUCCESS.code){
-                        return new PrintError(errorCode);
-                    }
-
-                    if (count > 10){
-                        sleep();
-                    }
-                    errorCode = printer.refund(
-                            checkItem.getTitle(),
-                            TEXT_WRAP_WORD,
-                            TEXT_ALIGNMENT_LEFT,
-                            checkItem.getQuantity(),
-                            checkItem.getPrice(),
-                            true);
-
-
-                    if (errorCode != DefaultPrintError.SUCCESS.code){
-                        return new PrintError(errorCode);
-                    }
-                    count++;
-
-                    if (checkItem.getDiscount() > 0f && Float.compare(commonDiscount, 0f) == 0){
-                        errorCode = printer.printString("( "+context.getString(R.string.check_item_discount)+" "+String.valueOf(checkItem.getDiscount())+"%)",
-                                TEXT_WRAP_WORD,TEXT_ALIGNMENT_RIGHT);
-                        if (errorCode != DefaultPrintError.SUCCESS.code){
-                            return new PrintError(errorCode);
-                        }
-                    }
-                }
-
-
-                if (commonDiscount > 0f){
-                    errorCode = printer.printString(
-                            context.getString(R.string.check_discount)+" "+
-                                    String.valueOf(commonDiscount)+"%",TEXT_WRAP_WORD, TEXT_ALIGNMENT_LEFT);
-                    if (errorCode != DefaultPrintError.SUCCESS.code){
-                        return new PrintError(errorCode);
-                    }
-                }
-                cashCheck.setCheckTime(printer.dateTime());
-                cashCheck.setCheckNumber(printer.checkNumber());
-                errorCode = printer.closeCheck(cashCheck.getPaymentType());
-                if (errorCode != DefaultPrintError.SUCCESS.code){
-                    return new PrintError(errorCode);
-                }
-                return DefaultPrintError.SUCCESS.getError();
+                return new PrintError(printer.updateStatus());
             }
         });
-    }
 
+    }
 }
