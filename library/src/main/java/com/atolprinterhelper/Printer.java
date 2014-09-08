@@ -13,31 +13,46 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Printer {
-    public static final int REPORT_TYPE_TAPE_DAMPING = 0;//Гашение контрольной ленты
-    public static final int REPORT_TYPE_DAILY_DAMPING = 1;//Суточный отчет с гашением
-    public static final int REPORT_TYPE_DAILY = 2;//Суточный отчет без гашения
-    public static final int REPORT_TYPE_SECTIONS = 7;//Отчет по секциям
+    /**Гашение контрольной ленты*/
+    public static final int REPORT_TYPE_TAPE_DAMPING = 0;
+    /**Суточный отчет с гашением*/
+    public static final int REPORT_TYPE_DAILY_DAMPING = 1;
+    /**Суточный отчет без гашения*/
+    public static final int REPORT_TYPE_DAILY = 2;
+    /**Отчет по секциям*/
+    public static final int REPORT_TYPE_SECTIONS = 7;
 
-    private static final int TEXT_ALIGNMENT_LEFT = 0;
-    private static final int TEXT_ALIGNMENT_CENTER = 1;
-    private static final int TEXT_ALIGNMENT_RIGHT = 2;
+    protected static final int TEXT_ALIGNMENT_LEFT = 0;
+    protected static final int TEXT_ALIGNMENT_CENTER = 1;
+    protected static final int TEXT_ALIGNMENT_RIGHT = 2;
 
-    private static final int TEXT_WRAP_DISABLED = 0;
-    private static final int TEXT_WRAP_LINE = 1;
-    private static final int TEXT_WRAP_WORD = 2;
+    protected static final int TEXT_WRAP_DISABLED = 0;
+    protected static final int TEXT_WRAP_LINE = 1;
+    protected static final int TEXT_WRAP_WORD = 2;
 
-    public static final int MODE_CHOICE = 0;//Режим выбора
-    public static final int MODE_REGISTRATION = 1;//Режим регистрации
-    public static final int MODE_XREPORT = 2;//X-отчет
-    public static final int MODE_ZREPORT = 3;//Z-отчет
+    /**Режим выбора*/
+    public static final int MODE_CHOICE = 0;
+    /**Режим регистрации*/
+    public static final int MODE_REGISTRATION = 1;
+    /**X-отчет*/
+    public static final int MODE_XREPORT = 2;
+    /**Z-отчет*/
+    public static final int MODE_ZREPORT = 3;
 
-    private static final int CHECK_TYPE_CLOSED = 0;//Чек закрыт
-    private static final int CHECK_TYPE_SALE = 1;// Чек продажи
-    private static final int CHECK_TYPE_REFUND = 2;// Чек возврата
-    private static final int CHECK_TYPE_CANCEL = 3;// Чек аннулирования
-    private static final int CHECK_TYPE_PURCHASE = 4;// Чек покупки
-    private static final int CHECK_TYPE_PURCHASE_REFUND = 5;// Чек возврата покупки
-    private static final int CHECK_TYPE_PURCHASE_CANCEL = 6;// Чек аннулирования покупки
+    /**Чек закрыт*/
+    public static final int CHECK_TYPE_CLOSED = 0;
+    /** Чек продажи*/
+    public static final int CHECK_TYPE_SALE = 1;
+    /** Чек возврата*/
+    public static final int CHECK_TYPE_REFUND = 2;
+    /** Чек аннулирования*/
+    public static final int CHECK_TYPE_ANNULATE = 3;
+    /** Чек покупки*/
+    public static final int CHECK_TYPE_PURCHASE = 4;
+    /** Чек возврата покупки*/
+    public static final int CHECK_TYPE_PURCHASE_REFUND = 5;
+    /** Чек аннулирования покупки*/
+    public static final int CHECK_TYPE_PURCHASE_ANNULATE = 6;
 
     //default payment types
     public static final int PAYMENT_TYPE_CASH = 0;
@@ -164,7 +179,7 @@ public class Printer {
         });
     }
 
-    public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck){
+    public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck, final int checkType){
         return perform(new PrinterAction() {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
@@ -173,7 +188,7 @@ public class Printer {
                     return error;
                 }
 
-                int errorCode = printer.openCheck(CHECK_TYPE_SALE);
+                int errorCode = printer.openCheck(checkType);;
 
                 if (errorCode != DefaultPrintError.SUCCESS.code){
                     return new PrintError(errorCode);
@@ -204,13 +219,70 @@ public class Printer {
                     if (count > 10){
                         sleep();
                     }
-                    errorCode = printer.registration(
-                                        checkItem.getTitle(),
-                                        TEXT_WRAP_WORD,
-                                        TEXT_ALIGNMENT_LEFT,
-                                        checkItem.getQuantity(),
-                                        checkItem.getPrice(),
-                                        checkItem.getDepartment());
+
+                    switch (checkType){
+                        case CHECK_TYPE_SALE:{
+                            errorCode = printer.registration(
+                                    checkItem.getTitle(),
+                                    TEXT_WRAP_WORD,
+                                    TEXT_ALIGNMENT_LEFT,
+                                    checkItem.getQuantity(),
+                                    checkItem.getPrice(),
+                                    checkItem.getDepartment());
+                        }break;
+
+                        case CHECK_TYPE_REFUND:{
+                            errorCode = printer.refund(
+                                    checkItem.getTitle(),
+                                    TEXT_WRAP_WORD,
+                                    TEXT_ALIGNMENT_LEFT,
+                                    checkItem.getQuantity(),
+                                    checkItem.getPrice(),
+                                    true);
+                        }break;
+
+                        case CHECK_TYPE_CLOSED: {
+                        }break;
+
+                        case CHECK_TYPE_ANNULATE: {
+                            errorCode = printer.annulate(
+                                    checkItem.getTitle(),
+                                    TEXT_WRAP_WORD,
+                                    TEXT_ALIGNMENT_LEFT,
+                                    checkItem.getQuantity(),
+                                    checkItem.getPrice(),
+                                    true);
+                        }break;
+
+                        case CHECK_TYPE_PURCHASE: {
+                            errorCode = printer.buy(
+                                    checkItem.getTitle(),
+                                    TEXT_WRAP_WORD,
+                                    TEXT_ALIGNMENT_LEFT,
+                                    checkItem.getQuantity(),
+                                    checkItem.getPrice(),
+                                    checkItem.getDepartment(),
+                                    true);
+                        }break;
+
+                        case CHECK_TYPE_PURCHASE_REFUND: {
+                            errorCode = printer.refundBuy(
+                                    checkItem.getTitle(),
+                                    TEXT_WRAP_WORD,
+                                    TEXT_ALIGNMENT_LEFT,
+                                    checkItem.getQuantity(),
+                                    checkItem.getPrice());
+                        }break;
+
+                        case CHECK_TYPE_PURCHASE_ANNULATE: {
+                            errorCode = printer.annulateBuy(
+                                    checkItem.getTitle(),
+                                    TEXT_WRAP_WORD,
+                                    TEXT_ALIGNMENT_LEFT,
+                                    checkItem.getQuantity(),
+                                    checkItem.getPrice());
+                        }break;
+                    }
 
 
                     if (errorCode != DefaultPrintError.SUCCESS.code){
@@ -245,8 +317,10 @@ public class Printer {
                 }
                 return DefaultPrintError.SUCCESS.getError();
             }
+        });
+    }
 
-            private void sleep() {
+    private void sleep() {
     /*adding delay to for remote service process to evade such error:
         com.atol.services.ecrservice E/Binder﹕ Caught an OutOfMemoryError from the binder stub implementation.
         java.lang.OutOfMemoryError: pthread_create (stack size 16384 bytes) failed: Try again
@@ -264,13 +338,11 @@ public class Printer {
         at com.atol.services.ecrservice.EcrImpl.registration(EcrImpl.java:458)
         at com.atol.services.ecrservice.IEcr$Stub.onTransact(IEcr.java:512)
     */
-                try {
-                    Thread.sleep(700);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        try {
+            Thread.sleep(700);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private int printLines(IEcr printer, List<String> lines) throws RemoteException {
@@ -461,4 +533,89 @@ public class Printer {
         return line[0];
 
     }
+
+    public PrintError printRefund(final CashCheck<? extends CheckItem> cashCheck){
+        return perform(new PrinterAction() {
+            @Override
+            public PrintError run(IEcr printer) throws RemoteException {
+                PrintError error = cashCheck.verify();
+                if (!error.isClear()){
+                    return error;
+                }
+
+                int errorCode = printer.openCheck(CHECK_TYPE_REFUND);
+
+
+                if (errorCode != DefaultPrintError.SUCCESS.code){
+                    return new PrintError(errorCode);
+                }
+
+                float commonDiscount = cashCheck.getItemList().get(0).getDiscount();
+
+                for (CheckItem checkItem : cashCheck.getItemList()){
+                    if (commonDiscount != checkItem.getDiscount()){
+                        commonDiscount = 0f;
+                        break;
+                    }
+                }
+
+                errorCode = printLines(printer, cashCheck.getHeaders());
+                if (errorCode != DefaultPrintError.SUCCESS.code){
+                    return new PrintError(errorCode);
+                }
+
+                int count = 0;
+                for (CheckItem checkItem : cashCheck.getItemList()){
+                    errorCode = printLines(printer, checkItem.getHeaders());
+
+                    if (errorCode != DefaultPrintError.SUCCESS.code){
+                        return new PrintError(errorCode);
+                    }
+
+                    if (count > 10){
+                        sleep();
+                    }
+                    errorCode = printer.refund(
+                            checkItem.getTitle(),
+                            TEXT_WRAP_WORD,
+                            TEXT_ALIGNMENT_LEFT,
+                            checkItem.getQuantity(),
+                            checkItem.getPrice(),
+                            true);
+
+
+                    if (errorCode != DefaultPrintError.SUCCESS.code){
+                        return new PrintError(errorCode);
+                    }
+                    count++;
+
+                    if (checkItem.getDiscount() > 0f && Float.compare(commonDiscount, 0f) == 0){
+                        errorCode = printer.printString("( "+context.getString(R.string.check_item_discount)+" "+String.valueOf(checkItem.getDiscount())+"%)",
+                                TEXT_WRAP_WORD,TEXT_ALIGNMENT_RIGHT);
+                        if (errorCode != DefaultPrintError.SUCCESS.code){
+                            return new PrintError(errorCode);
+                        }
+                    }
+                }
+
+
+                if (commonDiscount > 0f){
+                    errorCode = printer.printString(
+                            context.getString(R.string.check_discount)+" "+
+                                    String.valueOf(commonDiscount)+"%",TEXT_WRAP_WORD, TEXT_ALIGNMENT_LEFT);
+                    if (errorCode != DefaultPrintError.SUCCESS.code){
+                        return new PrintError(errorCode);
+                    }
+                }
+                cashCheck.setCheckTime(printer.dateTime());
+                cashCheck.setCheckNumber(printer.checkNumber());
+                errorCode = printer.closeCheck(cashCheck.getPaymentType());
+                if (errorCode != DefaultPrintError.SUCCESS.code){
+                    return new PrintError(errorCode);
+                }
+                return DefaultPrintError.SUCCESS.getError();
+            }
+        });
+    }
+
 }
