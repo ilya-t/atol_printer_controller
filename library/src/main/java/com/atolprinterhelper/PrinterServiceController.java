@@ -28,6 +28,7 @@ class PrinterServiceController implements ServiceConnection{
     private Printer printer;
 
     public static PrinterServiceController newInstance(Printer printer){
+        //FIXME improve link to Printer (not last instance!)
         if (instance == null){
             instance = new PrinterServiceController(printer);
         }else{
