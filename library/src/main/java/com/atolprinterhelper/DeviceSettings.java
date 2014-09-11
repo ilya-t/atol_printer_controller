@@ -68,7 +68,7 @@ public class DeviceSettings {
                     deviceSettings.dateTime = printer.dateTime();
                 }
 
-                return DefaultPrintError.SUCCESS.getError();
+                return DefaultPrintError.SUCCESS.get();
             }
         });
 

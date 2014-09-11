@@ -23,11 +23,11 @@ interface IEcr
 	ParcelableDate dateTime();
 
 	/** Возвращает режим работы ККМ.
-	    @return Числовое значение – номер режима ККМ:
-                0 - Режим выбора
-                1 - Режим регистрации
-                2 - X-отчет
-                3 - Z-отчет.*/
+	    @return Числовое значение – номер режима ККМ:<br>
+        <div style="padding-left: 20px;">0 - Режим выбора</div>
+        <div style="padding-left: 20px;">1 - Режим регистрации</div>
+        <div style="padding-left: 20px;">2 - X-отчет</div>
+        <div style="padding-left: 20px;">3 - Z-отчет.</div>*/
 	int		mode();
 
 	/** Возвращает подрежим работы ККМ.
@@ -37,14 +37,15 @@ interface IEcr
 	int		subMode();
 
 	/** Возвращает текущее состояние чека.
-	    @return Числовое значение – текущее состояние чека:
-	            0 - Чек закрыт
-                1 - Чек продажи
-                2 - Чек возврата
-                3 - Чек аннулирования
-                4 - Чек покупки
-                5 - Чек возврата покупки
-                6 - Чек аннулирования покупки. */
+	 * @return Числовое значение – текущее состояние чека:<br>
+	 * <div style="padding-left: 20px;"> 0 - Чек закрыт</div>
+     * <div style="padding-left: 20px;"> 1 - Чек продажи</div>
+     * <div style="padding-left: 20px;"> 2 - Чек возврата</div>
+     * <div style="padding-left: 20px;"> 3 - Чек аннулирования</div>
+     * <div style="padding-left: 20px;"> 4 - Чек покупки</div>
+     * <div style="padding-left: 20px;"> 5 - Чек возврата покупки</div>
+     * <div style="padding-left: 20px;"> 6 - Чек аннулирования покупки.</div>
+     */
 	int		checkState();
 
 	/** Возвращает номер чека.
@@ -75,7 +76,7 @@ interface IEcr
 
 	/** Возвращает признак наличие бумаги
 	    @return
-	        true – бумага имеется
+	        true – бумага имеется<br>
 	        false – бумага отсутствует.*/
 	boolean	isPaperPresent();
 

@@ -11,6 +11,7 @@ import com.atol.services.ecrservice.IEcr;
 import com.atol.services.ecrservice.ParcelableDate;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 public class Printer {
@@ -54,6 +55,21 @@ public class Printer {
     public static final int CHECK_TYPE_PURCHASE_REFUND = 5;
     /** Чек аннулирования покупки*/
     public static final int CHECK_TYPE_PURCHASE_ANNULATE = 6;
+
+    /**Чек закрыт*/
+    public static final int CHECK_STATE_CLOSED = 0;
+    /**Чек продажи*/
+    public static final int CHECK_STATE_SALE = 1;
+    /**Чек возврата*/
+    public static final int CHECK_STATE_REFUND = 2;
+    /**Чек аннулирования*/
+    public static final int CHECK_STATE_ANNULATE = 3;
+    /**Чек покупки*/
+    public static final int CHECK_STATE_PURCHASE = 4;
+    /**Чек возврата покупки*/
+    public static final int CHECK_STATE_PURCHASE_REFUND = 5;
+    /**Чек аннулирования покупки.*/
+    public static final int CHECK_STATE_PURCHASE_ANNULATE = 6;
 
     //default payment types
     public static final int PAYMENT_TYPE_CASH = 0;
@@ -126,8 +142,8 @@ public class Printer {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
                 return printer.isDeviceEnabled()
-                        ?DefaultPrintError.SUCCESS.getError()
-                        :DefaultPrintError.FAIL.getError();
+                        ?DefaultPrintError.SUCCESS.get()
+                        :DefaultPrintError.FAIL.get();
             }
         }).isClear();
     }
@@ -137,8 +153,8 @@ public class Printer {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
                 return isDeviceConfigured(printer)
-                                ? DefaultPrintError.SUCCESS.getError()
-                                : DefaultPrintError.FAIL.getError();
+                                ? DefaultPrintError.SUCCESS.get()
+                                : DefaultPrintError.FAIL.get();
             }
         }).isClear();
     }
@@ -326,14 +342,23 @@ public class Printer {
                 }
                 ParcelableDate checkTime = printer.dateTime();
                 int checkId = printer.checkNumber();
+                long timeStart = Calendar.getInstance().getTimeInMillis();
 
                 errorCode = printer.closeCheck(cashCheck.getPaymentType());
+
+                long timeEnd = Calendar.getInstance().getTimeInMillis();
+
                 if (errorCode != DefaultPrintError.SUCCESS.code){
                     return new PrintError(errorCode);
                 }
                 cashCheck.setCheckTime(checkTime);
                 cashCheck.setCheckNumber(checkId);
-                return DefaultPrintError.SUCCESS.getError();
+
+                // checking that driver memory is ok (if check was printed in less than 0.1 second)
+                if (timeStart < timeEnd && timeEnd - timeStart < 100){
+                    return DefaultPrintError.OUT_OF_MEMORY.get();
+                }
+                return DefaultPrintError.SUCCESS.get();
             }
         });
     }
@@ -379,11 +404,11 @@ public class Printer {
     protected PrintError perform(PrinterAction action){
         if (!sc.isConnected()){
             sc.startService();
-            return DefaultPrintError.SERVICE_CONNECTION.getError();
+            return DefaultPrintError.SERVICE_CONNECTION.get();
         }
 
         if (sc.getPrinterInterface() == null){
-            return DefaultPrintError.EMPTY_INTERFACE.getError();
+            return DefaultPrintError.EMPTY_INTERFACE.get();
         }
 
         if (isConfiguring){
@@ -462,7 +487,7 @@ public class Printer {
                     if (!isDeviceConfigured(printer)) {
                         printer.setDeviceSettings(settingsContainer.getSettingsConfig());
                     }
-                    return DefaultPrintError.SUCCESS.getError();
+                    return DefaultPrintError.SUCCESS.get();
                 }
             });
         }
@@ -473,7 +498,7 @@ public class Printer {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
                 printer.setDeviceSettings(deviceSettings);
-                return DefaultPrintError.SUCCESS.getError();
+                return DefaultPrintError.SUCCESS.get();
             }
         });
     }
@@ -497,7 +522,7 @@ public class Printer {
             @Override
             public PrintError run(IEcr printer) throws RemoteException {
                 mode[0] = printer.mode();
-                return DefaultPrintError.SUCCESS.getError();
+                return DefaultPrintError.SUCCESS.get();
             }
         }).isClear()){
             return mode[0];
@@ -526,7 +551,7 @@ public class Printer {
                     @Override
                     public PrintError run(IEcr printer) throws RemoteException {
                         result[0] = printer.isSessionOpened();
-                        return DefaultPrintError.SUCCESS.getError();
+                        return DefaultPrintError.SUCCESS.get();
                     }
                 });
         
@@ -544,7 +569,7 @@ public class Printer {
                 char[] array = new char[length];
                 Arrays.fill(array, divider);
                 line[0] = new String(array);
-                return DefaultPrintError.SUCCESS.getError();
+                return DefaultPrintError.SUCCESS.get();
             }
         });
 
