@@ -14,12 +14,12 @@ import java.util.Calendar;
 public class Example {
 
     public Example(Activity activity){
-        Printer printer = new Printer(activity);
+        Printer printer = Printer.getInstance(activity);
 
         if (printer.isConnected()){
             printer.printString(DateFormat.getInstance().format(Calendar.getInstance().getTime()) + " : print test");
 
-            CashCheck<CheckItem> check = new CashCheck(PaymentType.CASH.getTypeId());
+            CashCheck<CheckItem> check = new CashCheck<>(PaymentType.CASH.getTypeId());
 
             check.getItemList().addAll(Arrays.asList(
                     new CheckItem("Potato", 1, 80),
@@ -27,14 +27,14 @@ public class Example {
                     new CheckItem("Beer", 3, 145.00)
             ));
 
-            if (!printer.printCheck(check).isClear()){
+            if (!printer.printCheck(check, Printer.CHECK_TYPE_SALE).isClear()){
                 printer.cancelCheck();
             }
         }else{
             if (printer.isConfigured()){
-                printer.connect();
+                printer.connectDevice();
             }else{
-                printer.configure(activity);
+                Printer.configure(activity);
             }
         }
     }

@@ -69,6 +69,7 @@ public class Printer {
     public static final int PAYMENT_TYPE_9 = 9;
     public static final int PAYMENT_TYPE_10 = 10;
 
+    private static Printer instance;
 
     private PrinterServiceController sc;
     private static final int REQUEST_CODE = 38921;
@@ -78,7 +79,15 @@ public class Printer {
     private SettingsContainer settingsContainer;
     private static boolean isConfiguring;
 
-    public Printer(Context context) {
+    public synchronized static Printer getInstance(Context context){
+        if (instance == null){
+            instance = new Printer(context);
+        }
+
+        return instance;
+    }
+
+    protected Printer(Context context) {
         this.context = context;
         settingsContainer = (this instanceof SettingsContainer)
                                 ?(SettingsContainer)this
