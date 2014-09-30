@@ -1,8 +1,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.atolprinterhelper">
 
-    <application android:allowBackup="true">
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
+    <application android:allowBackup="true">
+        <activity
+            android:name="com.atol.drivers.fptr.settings.SettingsActivity"
+            android:label="Страница свойств драйвера ККМ"
+            android:windowSoftInputMode="adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.atol.drivers.fptr.settings.DeviceListActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="Выбор устройства"/>
     </application>
 
 </manifest>

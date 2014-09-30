@@ -10,13 +10,13 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 19
+    compileSdkVersion 14
     buildToolsVersion "19.1.0"
 
     defaultConfig {
         applicationId "com.atolprinterhelper"
         minSdkVersion 9
-        targetSdkVersion 19
+        targetSdkVersion 14
         versionCode 1
         versionName "1.0"
     }
@@ -34,6 +34,8 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-//    compile 'com.android.support:appcompat-v7:19.+'
+//    compile fileTree(dir: 'libs', include: ['*.jar'])
+    //    compile 'com.android.support:appcompat-v7:19.+'
+    compile files('libs/armeabi.jar')
+    compile files('libs/fptrlib.jar')
 }
