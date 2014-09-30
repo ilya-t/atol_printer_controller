@@ -1,9 +1,11 @@
 package com.atolprinterhelper;
 
-import android.os.RemoteException;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
-import com.atol.services.ecrservice.IEcr;
-
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Date;
 
 public class DeviceSettings {
@@ -13,6 +15,7 @@ public class DeviceSettings {
 
     private String transport;
     private boolean autoEnableBluetooth;
+    private boolean autoDisableBluetooth;
     private String deviceAddress;
     private String deviceName;
     private String model;
@@ -26,56 +29,120 @@ public class DeviceSettings {
     private Date dateTime;
     private PrintError error;
 
-    static DeviceSettings getInstance(Printer printer, final boolean includeDeviceInfo){
-        final DeviceSettings deviceSettings = new DeviceSettings();
-        PrintError error = printer.perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                deviceSettings.transport = printer.deviceSetting("transport");
-                deviceSettings.deviceAddress = printer.deviceSetting("deviceAddress");
-                deviceSettings.deviceName = printer.deviceSetting("deviceName");
-                deviceSettings.model = printer.deviceSetting("model");
-                deviceSettings.userPassword = printer.deviceSetting("userPassword");
-                deviceSettings.accessPassword = printer.deviceSetting("accessPassword");
-                try {
-                    deviceSettings.autoEnableBluetooth = Boolean.parseBoolean(printer.deviceSetting("autoEnableBluetooth"));
-                    deviceSettings.connectionType = Integer.parseInt(printer.deviceSetting("connectionType"));
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                }
+    static DeviceSettings getInstance(String settingsConfig){
+        final DeviceSettings ds = new DeviceSettings();
+        ds.settingsConfig = settingsConfig;
+        XmlPullParser parser = null;
 
-                deviceSettings.settingsConfig = printer.deviceSettings();
+        try {
+            // получаем фабрику
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            // включаем поддержку namespace (по умолчанию выключена)
+            factory.setNamespaceAware(true);
+            // создаем парсер
+            parser = factory.newPullParser();
+            // даем парсеру на вход Reader
+            parser.setInput(new StringReader(ds.settingsConfig));
+        } catch (XmlPullParserException e) {
+            e.printStackTrace();
+        }
 
-                if (includeDeviceInfo && printer.isDeviceEnabled()){
-                    deviceSettings.serialNumber = printer.serialNumber();
+        if (parser != null){
+            String ELEMENT_SETTINGS = "settings";
+            String TAG_VALUE = "value";
+            String ATTRIBUTE_NAME = "name";
 
-                    if (deviceSettings.serialNumber == null){
-                        int errorCode;
-                        errorCode = printer.setMode(Printer.MODE_CHOICE);
 
-                        if (errorCode != DefaultPrintError.SUCCESS.code) {
-                            return new PrintError(errorCode);
-                        }
+            String tagName = "", settingName = "", settingValue = "";
+            try {
+                while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
+                    switch (parser.getEventType()) {
+                        case XmlPullParser.START_TAG:
+                            tagName = parser.getName();
+                            if (tagName.equals(TAG_VALUE)){
+                                for (int i = 0; i < parser.getAttributeCount(); i++) {
+                                    if (parser.getAttributeName(i).equals(ATTRIBUTE_NAME)){
+                                        settingName = parser.getAttributeValue(i);
+                                    }
+                                }
+                            }
+                            break;
+                        case XmlPullParser.END_TAG:
+                            if (tagName.equals(TAG_VALUE)){
+                                switch (settingName){
+                                    case "DeviceName":{
+                                        ds.deviceName = settingValue;
+                                    }break;
+                                    case "Port":{
+                                        ds.transport = settingValue;
+                                    }break;
+                                    case "Model":{
+                                        ds.model = settingValue;
+                                    }break;
+                                    case "MACAddress":{
+                                        ds.deviceAddress = settingValue;
+                                    }break;
+                                    case "AutoDisableBluetooth":{
+                                        ds.autoDisableBluetooth = settingValue.equals("1");
+                                    }break;
+                                    case "connectionType":{
+                                        try {
+                                            ds.connectionType = Integer.parseInt(settingValue);
+                                        } catch (NumberFormatException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }break;
+                                    case "UserPassword":{
+                                        ds.userPassword = settingValue;
+                                    }break;
+                                    case "AutoEnableBluetooth":{
+                                        ds.autoEnableBluetooth = settingValue.equals("1");
+                                    }break;
+                                    case "AccessPassword":{
+                                        ds.accessPassword = settingValue;
+                                    }break;
+                                }
+                            }
 
-                        errorCode = printer.updateStatus();
-                        if (errorCode != DefaultPrintError.SUCCESS.code) {
-                            return new PrintError(errorCode);
-                        }
-                        deviceSettings.serialNumber = printer.serialNumber();
+                            tagName = settingName = settingValue = "";
+                            break;
+                        case XmlPullParser.TEXT:
+                            if (tagName.equals(TAG_VALUE) && !settingName.equals("")){
+                                settingValue = parser.getText();
+                            }
+                            break;
                     }
-
-
-                    deviceSettings.dateTime = printer.dateTime();
+                    parser.next();
                 }
-
-                return DefaultPrintError.SUCCESS.get();
+            } catch (XmlPullParserException | IOException e) {
+                e.printStackTrace();
             }
-        });
+        }
 
-        deviceSettings.setError(error);
+        return ds;
+    }
+
+    public static DeviceSettings getInstance(Printer printer, final boolean includeDeviceInfo){
+        final DeviceSettings deviceSettings = getInstance(printer.getDriver().get_DeviceSettings());
+
+
+        if (includeDeviceInfo && printer.getDriver().get_DeviceEnabled()) {
+            deviceSettings.serialNumber = printer.getDriver().get_SerialNumber();
+
+            if (deviceSettings.serialNumber == null) {
+                PrintError printError = printer.setMode(Printer.MODE_CHOICE);
+
+                if (!printError.isClear()){
+                    deviceSettings.error = printError;
+                }
+                deviceSettings.serialNumber = printer.getDriver().get_SerialNumber();
+            }
+
+
+            deviceSettings.dateTime = printer.getDriver().get_Time();
+        }
 
         return deviceSettings;
-
     }
 
     private DeviceSettings(){

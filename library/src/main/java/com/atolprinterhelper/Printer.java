@@ -1,17 +1,15 @@
 package com.atolprinterhelper;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.os.RemoteException;
 
-import com.atol.services.ecrservice.IEcr;
-import com.atol.services.ecrservice.ParcelableDate;
+import com.atol.drivers.fptr.IFptr;
+import com.atol.drivers.fptr.settings.SettingsActivity;
 
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class Printer {
@@ -29,8 +27,8 @@ public class Printer {
     protected static final int TEXT_ALIGNMENT_RIGHT = 2;
 
     protected static final int TEXT_WRAP_DISABLED = 0;
-    protected static final int TEXT_WRAP_LINE = 1;
-    protected static final int TEXT_WRAP_WORD = 2;
+    protected static final int TEXT_WRAP_WORD = 1;
+    protected static final int TEXT_WRAP_LINE = 2;
 
     /**Режим выбора*/
     public static final int MODE_CHOICE = 0;
@@ -41,8 +39,6 @@ public class Printer {
     /**Z-отчет*/
     public static final int MODE_ZREPORT = 3;
 
-    /**Чек закрыт*/
-    public static final int CHECK_TYPE_CLOSED = 0;
     /** Чек продажи*/
     public static final int CHECK_TYPE_SALE = 1;
     /** Чек возврата*/
@@ -87,15 +83,15 @@ public class Printer {
 
     private static Printer instance;
 
-    private PrinterServiceController sc;
     private static final int REQUEST_CODE = 38921;
     final Context context;
+    private IFptr driver;
 
 
     private SettingsContainer settingsContainer;
-    private static boolean isConfiguring;
+    private DeviceSettings connectionSettings;
 
-    public synchronized static Printer getInstance(Context context){
+    public synchronized static Printer getInstance(Context context) throws NullPointerException{
         if (instance == null){
             instance = new Printer(context);
         }
@@ -103,404 +99,224 @@ public class Printer {
         return instance;
     }
 
-    protected Printer(Context context) {
+    protected Printer(Context context) throws NullPointerException{
         this.context = context;
         settingsContainer = (this instanceof SettingsContainer)
                                 ?(SettingsContainer)this
                                 :new DefaultSettingsContainer(context);
-        init();
-    }
+        if (driver == null){
+            driver = new IFptr();
+            try {
+                driver.create(context);
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+                driver = null;
+                throw e;
+            }
 
-    private void init() {
-        sc = PrinterServiceController.newInstance(this);
-
-        if (!sc.isConnected()){
-            sc.startService();
+            driver.put_DeviceEnabled(false);
         }
     }
+
 
     /** launches Settings activity inside printer service app */
-    public static boolean configure(Activity activity) {
-        if (isDriverInstalled(activity)){
-            Intent intent = new Intent();
-            intent.setComponent(new ComponentName(PrinterServiceController.SERVICE_PACKAGE_NAME, PrinterServiceController.SERVICE_PACKAGE_NAME +".settings.SettingsActivity"));
-            activity.startActivityForResult(intent, REQUEST_CODE);
-            isConfiguring = true;
-            return true;
-        }else{
-            return false;
-        }
-    }
-
-    /** checks if connected to printer remote service app */
-    public boolean isServiceConnected(){
-        return sc.isConnected();
+    public static void configure(Activity activity) {
+        Intent intent = new Intent(activity, SettingsActivity.class);
+//        intent.putExtra(SettingsActivity.DEVICE_SETTINGS, printer.get_DeviceSettings());
+        activity.startActivityForResult(intent, REQUEST_CODE);
     }
 
     public boolean isConnected() {
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                return printer.isDeviceEnabled()
-                        ?DefaultPrintError.SUCCESS.get()
-                        :DefaultPrintError.FAIL.get();
-            }
-        }).isClear();
+        return driver != null && driver.get_DeviceEnabled();
     }
 
-    public boolean isConfigured() {
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                return isDeviceConfigured(printer)
-                                ? DefaultPrintError.SUCCESS.get()
-                                : DefaultPrintError.FAIL.get();
-            }
-        }).isClear();
-    }
-
-    private boolean isDeviceConfigured(IEcr printer) throws RemoteException {
-        return !printer.deviceSetting("deviceName").equals("") && !printer.deviceSetting("deviceAddress").equals("");
-    }
 
     public PrintError connectDevice() {
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                return new PrintError(printer.enableDevice(true));
-            }
-        });
-    }
-
-    public void connectToService(){
-        if (!sc.isConnected()){
-            sc.startService();
+        if (driver.put_DeviceSettings(settingsContainer.getSettingsConfig()) != 0){
+            return getLastError();
         }
+
+        if (driver.put_DeviceEnabled(true) != 0){
+            return getLastError();
+        }
+
+        connectionSettings = getDeviceSettings();
+
+        return DefaultPrintError.SUCCESS.get();
     }
 
     public PrintError setMode(final int mode){
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                return new PrintError(printer.setMode(mode));
-            }
-        });
+        driver.put_UserPassword(getDeviceSettings().getUserPassword());
+        driver.put_Mode(mode);
+        if (driver.SetMode() != 0){
+            return getLastError();
+        }
+        return DefaultPrintError.SUCCESS.get();
     }
 
     public PrintError resetMode(){
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                return new PrintError(printer.resetMode());
-            }
-        });
+        return  driver.ResetMode() != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
     }
 
     public PrintError cancelCheck(){
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                return new PrintError(printer.cancelCheck());
-            }
-        });
+        return  driver.CancelCheck() != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
     }
 
     public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck, final int checkType){
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                PrintError error = cashCheck.verify();
+        PrintError error = cashCheck.verify();
+        if (!error.isClear()) {
+            return error;
+        }
+
+        driver.put_CheckType(checkType);
+        if (driver.OpenCheck() != 0){
+            return getLastError();
+        }
+
+        float commonDiscount = cashCheck.getItemList().get(0).getDiscount();
+
+        for (CheckItem checkItem : cashCheck.getItemList()) {
+            if (commonDiscount != checkItem.getDiscount()) {
+                commonDiscount = 0f;
+                break;
+            }
+        }
+
+        error = printLines(cashCheck.getHeaders());
+        if (!error.isClear()) {
+            return error;
+        }
+
+        for (CheckItem checkItem : cashCheck.getItemList()) {
+            error = printLines(checkItem.getHeaders());
+            if (!error.isClear()) {
+                return error;
+            }
+
+            driver.put_Name(checkItem.getTitle());
+            driver.put_Quantity(checkItem.getQuantity());
+            driver.put_Price(checkItem.getPrice());
+            driver.put_Department(checkItem.getDepartment());
+
+            driver.put_TextWrap(TEXT_WRAP_WORD);
+            int errorCode = 0;
+            switch (checkType) {
+                case CHECK_TYPE_SALE: {
+                    errorCode = driver.Registration();
+                }break;
+                case CHECK_TYPE_REFUND: {
+                    errorCode = driver.Return();
+                }break;
+                case CHECK_TYPE_ANNULATE: {
+                    errorCode = driver.Annulate();
+                }break;
+                case CHECK_TYPE_PURCHASE: {
+                    errorCode = driver.Buy();
+                }break;
+                case CHECK_TYPE_PURCHASE_REFUND: {
+                    errorCode = driver.BuyReturn();
+                }break;
+                case CHECK_TYPE_PURCHASE_ANNULATE: {
+                    errorCode = driver.BuyAnnulate();
+                }break;}
+
+            if (errorCode != 0){
+                return getLastError();
+            }
+
+            if (checkItem.getDiscount() > 0f && Float.compare(commonDiscount, 0f) == 0) {
+                error = printString("( " + context.getString(R.string.check_item_discount) + " " + String.valueOf(checkItem.getDiscount()) + "%)");
                 if (!error.isClear()){
                     return error;
                 }
-
-                int errorCode = printer.updateStatus();
-
-                if (errorCode != DefaultPrintError.SUCCESS.code){
-                    return new PrintError(errorCode);
-                }
-
-                errorCode = printer.openCheck(checkType);
-
-                if (errorCode != DefaultPrintError.SUCCESS.code){
-                    return new PrintError(errorCode);
-                }
-
-                float commonDiscount = cashCheck.getItemList().get(0).getDiscount();
-
-                for (CheckItem checkItem : cashCheck.getItemList()){
-                    if (commonDiscount != checkItem.getDiscount()){
-                        commonDiscount = 0f;
-                        break;
-                    }
-                }
-
-                errorCode = printLines(printer, cashCheck.getHeaders());
-                if (errorCode != DefaultPrintError.SUCCESS.code){
-                    return new PrintError(errorCode);
-                }
-
-                int count = 0;
-                for (CheckItem checkItem : cashCheck.getItemList()){
-                    errorCode = printLines(printer, checkItem.getHeaders());
-
-                    if (errorCode != DefaultPrintError.SUCCESS.code){
-                        return new PrintError(errorCode);
-                    }
-
-                    if (count > 10){
-                        sleep();
-                    }
-
-                    switch (checkType){
-                        case CHECK_TYPE_SALE:{
-                            errorCode = printer.registration(
-                                    checkItem.getTitle(),
-                                    TEXT_WRAP_WORD,
-                                    TEXT_ALIGNMENT_LEFT,
-                                    checkItem.getQuantity(),
-                                    checkItem.getPrice(),
-                                    checkItem.getDepartment());
-                        }break;
-
-                        case CHECK_TYPE_REFUND:{
-                            errorCode = printer.refund(
-                                    checkItem.getTitle(),
-                                    TEXT_WRAP_WORD,
-                                    TEXT_ALIGNMENT_LEFT,
-                                    checkItem.getQuantity(),
-                                    checkItem.getPrice(),
-                                    true);
-                        }break;
-
-                        case CHECK_TYPE_CLOSED: {
-                        }break;
-
-                        case CHECK_TYPE_ANNULATE: {
-                            errorCode = printer.annulate(
-                                    checkItem.getTitle(),
-                                    TEXT_WRAP_WORD,
-                                    TEXT_ALIGNMENT_LEFT,
-                                    checkItem.getQuantity(),
-                                    checkItem.getPrice(),
-                                    true);
-                        }break;
-
-                        case CHECK_TYPE_PURCHASE: {
-                            errorCode = printer.buy(
-                                    checkItem.getTitle(),
-                                    TEXT_WRAP_WORD,
-                                    TEXT_ALIGNMENT_LEFT,
-                                    checkItem.getQuantity(),
-                                    checkItem.getPrice(),
-                                    checkItem.getDepartment(),
-                                    true);
-                        }break;
-
-                        case CHECK_TYPE_PURCHASE_REFUND: {
-                            errorCode = printer.refundBuy(
-                                    checkItem.getTitle(),
-                                    TEXT_WRAP_WORD,
-                                    TEXT_ALIGNMENT_LEFT,
-                                    checkItem.getQuantity(),
-                                    checkItem.getPrice());
-                        }break;
-
-                        case CHECK_TYPE_PURCHASE_ANNULATE: {
-                            errorCode = printer.annulateBuy(
-                                    checkItem.getTitle(),
-                                    TEXT_WRAP_WORD,
-                                    TEXT_ALIGNMENT_LEFT,
-                                    checkItem.getQuantity(),
-                                    checkItem.getPrice());
-                        }break;
-                    }
-
-
-                    if (errorCode != DefaultPrintError.SUCCESS.code){
-                        return new PrintError(errorCode);
-                    }
-                    count++;
-
-                    if (checkItem.getDiscount() > 0f && Float.compare(commonDiscount, 0f) == 0){
-                        errorCode = printer.printString("( "+context.getString(R.string.check_item_discount)+" "+String.valueOf(checkItem.getDiscount())+"%)",
-                                                        TEXT_WRAP_WORD,TEXT_ALIGNMENT_RIGHT);
-                        if (errorCode != DefaultPrintError.SUCCESS.code){
-                            return new PrintError(errorCode);
-                        }
-                    }
-                }
-
-
-                if (commonDiscount > 0f){
-                    errorCode = printer.printString(
-                            context.getString(R.string.check_discount)+" "+
-                                    String.valueOf(commonDiscount)+"%",TEXT_WRAP_WORD, TEXT_ALIGNMENT_LEFT);
-                    if (errorCode != DefaultPrintError.SUCCESS.code){
-                        return new PrintError(errorCode);
-                    }
-                }
-                ParcelableDate checkTime = printer.dateTime();
-                int checkId = printer.checkNumber();
-                long timeStart = Calendar.getInstance().getTimeInMillis();
-
-                errorCode = printer.closeCheck(cashCheck.getPaymentType());
-
-                long timeEnd = Calendar.getInstance().getTimeInMillis();
-
-                if (errorCode != DefaultPrintError.SUCCESS.code){
-                    return new PrintError(errorCode);
-                }
-                cashCheck.setCheckTime(checkTime);
-                cashCheck.setCheckNumber(checkId);
-
-                // checking that driver memory is ok (if check was printed in less than 0.1 second)
-                if (timeStart < timeEnd && timeEnd - timeStart < 100){
-                    return DefaultPrintError.OUT_OF_MEMORY.get();
-                }
-                return DefaultPrintError.SUCCESS.get();
             }
-        });
-    }
-
-    private void sleep() {
-    /*adding delay to for remote service process to evade such error:
-        com.atol.services.ecrservice E/Binder﹕ Caught an OutOfMemoryError from the binder stub implementation.
-        java.lang.OutOfMemoryError: pthread_create (stack size 16384 bytes) failed: Try again
-        at java.lang.VMThread.create(Native Method)
-        at java.lang.Thread.start(Thread.java:1029)
-        at java.util.concurrent.ThreadPoolExecutor.addWorker(ThreadPoolExecutor.java:920)
-        at java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1338)
-        at java.util.concurrent.AbstractExecutorService.submit(AbstractExecutorService.java:103)
-        at com.atol.services.ecrservice.TransportBluetooth.read(TransportBluetooth.java:114)
-        at com.atol.services.ecrservice.LowLevelProtocolAtol2.readWithTimeout(LowLevelProtocolAtol2.java:112)
-        at com.atol.services.ecrservice.LowLevelProtocolAtol2.query(LowLevelProtocolAtol2.java:260)
-        at com.atol.services.ecrservice.DriverAtol2.openCheck(DriverAtol2.java:682)
-        at com.atol.services.ecrservice.EcrImpl.openCheck(EcrImpl.java:378)
-        at com.atol.services.ecrservice.EcrImpl.registration(EcrImpl.java:523)
-        at com.atol.services.ecrservice.EcrImpl.registration(EcrImpl.java:458)
-        at com.atol.services.ecrservice.IEcr$Stub.onTransact(IEcr.java:512)
-    */
-        try {
-            Thread.sleep(700);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
+
+
+        if (commonDiscount > 0f) {
+            error = printString(
+                    context.getString(R.string.check_discount) + " " + String.valueOf(commonDiscount) + "%");
+
+            if (!error.isClear()){
+                return error;
+            }
+        }
+
+
+        int checkId = driver.get_CheckNumber();
+        long timeStart = Calendar.getInstance().getTimeInMillis();
+
+        driver.put_TypeClose(cashCheck.getPaymentType());
+        if (driver.CloseCheck() != 0){
+            return getLastError();
+        }
+
+        long timeEnd = Calendar.getInstance().getTimeInMillis();
+        Date checkTime = driver.get_Time();
+
+        cashCheck.setCheckTime(checkTime);
+        cashCheck.setCheckNumber(checkId);
+
+/*
+        // checking that driver memory is ok (if check was printed in less than 0.1 second)
+        if (timeStart < timeEnd && timeEnd - timeStart < 100) {
+            return DefaultPrintError.OUT_OF_MEMORY.get();
+        }
+*/
+        return DefaultPrintError.SUCCESS.get();
     }
 
-    private int printLines(IEcr printer, List<String> lines) throws RemoteException {
+    private PrintError printLines(List<String> lines) {
         if (lines != null){
             for (String line : lines){
-                int errorCode = printer.printString(line, TEXT_WRAP_WORD, TEXT_ALIGNMENT_LEFT);
-                if (errorCode != DefaultPrintError.SUCCESS.code){
-                    return errorCode;
+                PrintError error = printString(line);
+
+                if (!error.isClear()){
+                    return error;
                 }
             }
         }
 
-        return DefaultPrintError.SUCCESS.code;
+        return DefaultPrintError.SUCCESS.get();
     }
 
-    protected PrintError perform(PrinterAction action){
-        if (!sc.isConnected()){
-            sc.startService();
-            return DefaultPrintError.SERVICE_CONNECTION.get();
+    private PrintError getLastError() {
+        if (driver != null){
+            String badParamDescription = driver.get_BadParamDescription();
+            badParamDescription = !badParamDescription.equals("")
+                            ?"("+ badParamDescription +")"
+                            : "";
+            return new PrintError(
+                    driver.get_ResultCode(),
+                    driver.get_ResultDescription() + badParamDescription
+            );
         }
-
-        if (sc.getPrinterInterface() == null){
-            return DefaultPrintError.EMPTY_INTERFACE.get();
-        }
-
-        if (isConfiguring){
-            isConfiguring = false;
-            saveDeviceSettings();
-        }
-
-        try {
-            return action.run(sc.getPrinterInterface());
-        } catch (RemoteException e) {
-            e.printStackTrace();
-            return new PrintError(DefaultPrintError.FAIL.code, e.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new PrintError(DefaultPrintError.FAIL.code, e.toString());
-        }
+        return DefaultPrintError.FAIL.get();
     }
 
     public PrintError printString(final String line) {
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                return new PrintError(printer.printString(line, TEXT_WRAP_WORD, TEXT_ALIGNMENT_LEFT));
-            }
-        });
+        driver.put_TextWrap(TEXT_WRAP_WORD);
+        driver.put_Caption(line);
+        driver.put_Alignment(TEXT_ALIGNMENT_LEFT);
+
+        int errorCode = driver.PrintString();
+        return errorCode != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
     }
 
     public PrintError report(final int reportType){
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                return new PrintError(printer.report(
-                        reportType,
-                        0/*unused*/,
-                        0,
-                        false));
-            }
-        });
+        driver.put_ReportType(reportType);
+        return driver.Report() != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
     }
 
     /** disconnects from printer device */
-    public PrintError disconnectDevice() {
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                return new PrintError(printer.enableDevice(false));
-            }
-        });
-    }
-
-    /** disconnects from service */
-    public void disconnectService(){
-        sc.unbindService();
-        sc.stopService();
-    }
-
-    /** disconnects from service and kills service process*/
-    public void forceStopService(){
-        sc.unbindService();
-        sc.forceStopService();
-    }
-
-    protected void onServiceConnected() {
-        DeviceSettings deviceSettings = DeviceSettings.getInstance(this, false);
-        if (
-                deviceSettings.isDeviceConfigured() &&
-                (
-                        settingsContainer.getSettingsConfig() == null ||
-                        settingsContainer.getSettingsConfig().equals("")
-                )){
-            settingsContainer.saveDeviceSettings(deviceSettings);
-        }else{
-            perform(new PrinterAction() {
-                @Override
-                public PrintError run(IEcr printer) throws RemoteException {
-                    if (!isDeviceConfigured(printer)) {
-                        printer.setDeviceSettings(settingsContainer.getSettingsConfig());
-                    }
-                    return DefaultPrintError.SUCCESS.get();
-                }
-            });
-        }
+    public void disconnectDevice() {
+        driver.put_DeviceEnabled(false);
+        driver.destroy();
+        driver = null;
     }
 
     public PrintError applyDeviceSettings(final String deviceSettings) {
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                printer.setDeviceSettings(deviceSettings);
-                return DefaultPrintError.SUCCESS.get();
-            }
-        });
+        return driver.put_DeviceSettings(deviceSettings) != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
     }
 
     /** saves current device settings on remote service to inner preferences file*/
@@ -515,75 +331,30 @@ public class Printer {
         return DeviceSettings.getInstance(this, true);
     }
 
-    public int getMode() {
-        final int[] mode = new int[1];
-        if (
-        perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                mode[0] = printer.mode();
-                return DefaultPrintError.SUCCESS.get();
-            }
-        }).isClear()){
-            return mode[0];
-        }
-        return -1;
-    }
-
-    /** checks if printer service package is installed */
-    public static boolean isDriverInstalled(Context context){
-        if (context != null && context.getPackageManager() != null){
-            List<PackageInfo> packageList = context.getPackageManager().getInstalledPackages(0);
-
-            for (PackageInfo packageInfo : packageList){
-                if (packageInfo.packageName.equals(PrinterServiceController.SERVICE_PACKAGE_NAME)){
-                    return true;
-                }
-            }
-        }
-        return false;
+    public int getMode(){
+        return driver.get_Mode();
     }
 
     public boolean isSessionOpened() {
-        final boolean[] result = new boolean[1];
-        perform(
-                new PrinterAction() {
-                    @Override
-                    public PrintError run(IEcr printer) throws RemoteException {
-                        result[0] = printer.isSessionOpened();
-                        return DefaultPrintError.SUCCESS.get();
-                    }
-                });
-        
-        return result[0];
+        return driver.get_SessionOpened();
     }
 
     /** @return divider line that fits check max width*/
     public String getDividerLine(final char divider) {
-        final String[] line = new String[1];
-        perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                line[0] = "";
-                int length = printer.charLineLength();
-                char[] array = new char[length];
-                Arrays.fill(array, divider);
-                line[0] = new String(array);
-                return DefaultPrintError.SUCCESS.get();
-            }
-        });
-
-        return line[0];
-
+        int length = driver.get_CharLineLength();
+        char[] array = new char[length];
+        Arrays.fill(array, divider);
+        return new String(array);
     }
 
-    public PrintError updateStatus() {
-        return perform(new PrinterAction() {
-            @Override
-            public PrintError run(IEcr printer) throws RemoteException {
-                return new PrintError(printer.updateStatus());
-            }
-        });
+    public boolean isConfigured() {
+        if (connectionSettings == null){
+            connectionSettings = DeviceSettings.getInstance(settingsContainer.getSettingsConfig());
+        }
+        return connectionSettings.isDeviceConfigured();
+    }
 
+    protected IFptr getDriver() {
+        return driver;
     }
 }

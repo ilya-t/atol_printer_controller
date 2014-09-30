@@ -4,12 +4,12 @@ public enum DefaultPrintError {
     //Default error codes according to Printer driver
     SUCCESS(0, ""),
     DEVICE_CONNECTION(-1, "Нет связи"),
+    @Deprecated
     OUT_OF_MEMORY(-18, "Неизвестная ошибка (OutOfMemoryError)"),
     CHECK_CLOSED(-3801, "Чек закрыт - операция невозможна"),
 
     FAIL(1, "Неизвестная ошибка"),
-    SERVICE_CONNECTION(2,"Не подключен к сервису"),
-    EMPTY_INTERFACE(3, "Отсутствует интерфейс сервиса");
+    DRIVER_CREATION(2,"Не удалось получить доступ к драйверу");
 
 
     final int code;
