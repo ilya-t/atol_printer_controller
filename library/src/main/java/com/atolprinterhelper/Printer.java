@@ -140,7 +140,7 @@ public class Printer {
             return getLastError();
         }
 
-        connectionSettings = getDeviceSettings();
+//        connectionSettings = getDeviceSettings();
 
         return DefaultPrintError.SUCCESS.get();
     }
