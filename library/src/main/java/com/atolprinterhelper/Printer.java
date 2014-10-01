@@ -287,10 +287,11 @@ public class Printer {
 
     PrintError getLastError() {
         if (driver != null){
-            return new PrintError(
-                    driver.get_ResultCode(),
-                    driver.get_ResultDescription()
-            );
+            PrintError lastError = new PrintError(driver.get_ResultCode(), driver.get_ResultDescription());
+            if (lastError.getErrorCode() == DefaultPrintError.DEVICE_DISCONNECT.code){
+                driver.put_DeviceEnabled(false);
+            }
+            return lastError;
         }
         return DefaultPrintError.FAIL.get();
     }
