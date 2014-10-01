@@ -11,12 +11,19 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 
-public class Example {
+public class Example extends Activity{
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Printer printer = null;
+        try {
+            printer = Printer.getInstance(AcMain.getInstance());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            return;
+        }
 
-    public Example(Activity activity){
-        Printer printer = Printer.getInstance(activity);
-
-        if (printer.isConnected()){
+        if (printer.isConfigured() && printer.connect().isClear()){
             printer.printString(DateFormat.getInstance().format(Calendar.getInstance().getTime()) + " : print test");
 
             CashCheck<CheckItem> check = new CashCheck<>(PaymentType.CASH.getTypeId());
@@ -27,15 +34,19 @@ public class Example {
                     new CheckItem("Beer", 3, 145.00)
             ));
 
-            if (!printer.printCheck(check, Printer.CHECK_TYPE_SALE).isClear()){
-                printer.cancelCheck();
-            }
+            printer.printCheck(check, Printer.CHECK_TYPE_SALE);
         }else{
-            if (printer.isConfigured()){
-                printer.connectDevice();
-            }else{
-                Printer.configure(activity);
-            }
+            Printer.configure(activity);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        try {
+            Printer.getInstance(this).onActivityResult(requestCode, resultCode, data);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
     }
 }

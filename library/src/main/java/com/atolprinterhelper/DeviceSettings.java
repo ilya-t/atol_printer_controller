@@ -6,7 +6,6 @@ import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Date;
 
 public class DeviceSettings {
     public final static int CONNECTION_BASIC = 1;//обычное подключение
@@ -26,7 +25,7 @@ public class DeviceSettings {
     private String settingsConfig;
 
     private String serialNumber;
-    private Date dateTime;
+    private long dateTime;//timestamp
     private PrintError error;
 
     static DeviceSettings getInstance(String settingsConfig){
@@ -47,6 +46,7 @@ public class DeviceSettings {
             e.printStackTrace();
         }
 
+        boolean hasData = false;
         if (parser != null){
             String ELEMENT_SETTINGS = "settings";
             String TAG_VALUE = "value";
@@ -69,6 +69,7 @@ public class DeviceSettings {
                             break;
                         case XmlPullParser.END_TAG:
                             if (tagName.equals(TAG_VALUE)){
+                                hasData = true;
                                 switch (settingName){
                                     case "DeviceName":{
                                         ds.deviceName = settingValue;
@@ -119,6 +120,8 @@ public class DeviceSettings {
             }
         }
 
+        ds.error = hasData?DefaultPrintError.SUCCESS.get():DefaultPrintError.FAIL.get();
+
         return ds;
     }
 
@@ -126,10 +129,24 @@ public class DeviceSettings {
         final DeviceSettings deviceSettings = getInstance(printer.getDriver().get_DeviceSettings());
 
 
-        if (includeDeviceInfo && printer.getDriver().get_DeviceEnabled()) {
+        if (includeDeviceInfo) {
+            if (!printer.isConnected()){
+                PrintError error = printer.connectDevice();
+
+                if (!error.isClear()){
+                    deviceSettings.error = error;
+                    return deviceSettings;
+                }
+            }
+
+            if (printer.getDriver().GetStatus() != 0){
+                deviceSettings.error = printer.getLastError();
+                return deviceSettings;
+            }
+
             deviceSettings.serialNumber = printer.getDriver().get_SerialNumber();
 
-            if (deviceSettings.serialNumber == null) {
+            if (deviceSettings.serialNumber == null || deviceSettings.serialNumber.equals("")) {
                 PrintError printError = printer.setMode(Printer.MODE_CHOICE);
 
                 if (!printError.isClear()){
@@ -139,9 +156,8 @@ public class DeviceSettings {
             }
 
 
-            deviceSettings.dateTime = printer.getDriver().get_Time();
+            deviceSettings.dateTime = printer.getPrinterTimeInMillis()/1000;
         }
-
         return deviceSettings;
     }
 
@@ -188,8 +204,8 @@ public class DeviceSettings {
         return serialNumber;
     }
 
-    /** @return printer datetime if device is connected*/
-    public Date getDateTime() {
+    /** @return printer timestamp (since last status update) if device is connected*/
+    public long getDateTime() {
         return dateTime;
     }
 
@@ -206,8 +222,7 @@ public class DeviceSettings {
     }
 
     public boolean isDeviceConfigured() {
-        return error.isClear() &&
-               deviceName != null && !deviceName.equals("") &&
+        return deviceName != null && !deviceName.equals("") &&
                deviceAddress != null && !deviceAddress.equals("");
     }
 }

@@ -1,7 +1,6 @@
 package com.atolprinterhelper;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class CashCheck<T extends CheckItem> {
@@ -52,8 +51,8 @@ public class CashCheck<T extends CheckItem> {
         return checkTime;
     }
 
-    protected void setCheckTime(Date checkTime) {
-        this.checkTime = checkTime.getTime()/1000;
+    protected void setCheckTime(long checkTimeInMillis) {
+        this.checkTime = checkTimeInMillis/1000;
     }
 
     public void setHeaders(List<String> headers) {

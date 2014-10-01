@@ -9,7 +9,6 @@ import com.atol.drivers.fptr.settings.SettingsActivity;
 
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 public class Printer {
@@ -91,7 +90,7 @@ public class Printer {
     private SettingsContainer settingsContainer;
     private DeviceSettings connectionSettings;
 
-    public synchronized static Printer getInstance(Context context) throws NullPointerException{
+    public synchronized static Printer getInstance(Context context) throws IllegalAccessException{
         if (instance == null){
             instance = new Printer(context);
         }
@@ -99,7 +98,7 @@ public class Printer {
         return instance;
     }
 
-    protected Printer(Context context) throws NullPointerException{
+    protected Printer(Context context) throws IllegalAccessException{
         this.context = context;
         settingsContainer = (this instanceof SettingsContainer)
                                 ?(SettingsContainer)this
@@ -111,7 +110,8 @@ public class Printer {
             } catch (NullPointerException e) {
                 e.printStackTrace();
                 driver = null;
-                throw e;
+                throw new IllegalAccessException("unable to access printer driver: "+
+                        (e.getMessage() != null ? e.getMessage() : e.toString()));
             }
 
             driver.put_DeviceEnabled(false);
@@ -146,7 +146,7 @@ public class Printer {
     }
 
     public PrintError setMode(final int mode){
-        driver.put_UserPassword(getDeviceSettings().getUserPassword());
+        driver.put_UserPassword(getConnectionSettings().getUserPassword());
         driver.put_Mode(mode);
         if (driver.SetMode() != 0){
             return getLastError();
@@ -242,7 +242,10 @@ public class Printer {
             }
         }
 
-
+        if (driver.GetStatus() != 0){
+            driver.CancelCheck();
+            return getLastError();
+        }
         int checkId = driver.get_CheckNumber();
         long timeStart = Calendar.getInstance().getTimeInMillis();
 
@@ -252,9 +255,8 @@ public class Printer {
         }
 
         long timeEnd = Calendar.getInstance().getTimeInMillis();
-        Date checkTime = driver.get_Time();
 
-        cashCheck.setCheckTime(checkTime);
+        cashCheck.setCheckTime(getPrinterTimeInMillis()/1000);
         cashCheck.setCheckNumber(checkId);
 
 /*
@@ -280,7 +282,7 @@ public class Printer {
         return DefaultPrintError.SUCCESS.get();
     }
 
-    private PrintError getLastError() {
+    PrintError getLastError() {
         if (driver != null){
             String badParamDescription = driver.get_BadParamDescription();
             badParamDescription = !badParamDescription.equals("")
@@ -311,20 +313,15 @@ public class Printer {
     /** disconnects from printer device */
     public void disconnectDevice() {
         driver.put_DeviceEnabled(false);
+    }
+
+    public void terminateInstance(){
         driver.destroy();
-        driver = null;
+        instance = null;
     }
 
     public PrintError applyDeviceSettings(final String deviceSettings) {
         return driver.put_DeviceSettings(deviceSettings) != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
-    }
-
-    /** saves current device settings on remote service to inner preferences file*/
-    private void saveDeviceSettings() {
-        DeviceSettings deviceSettings = getDeviceSettings();
-        if (deviceSettings.getError().isClear()){
-            settingsContainer.saveDeviceSettings(deviceSettings);
-        }
     }
 
     public DeviceSettings getDeviceSettings(){
@@ -333,6 +330,19 @@ public class Printer {
 
     public int getMode(){
         return driver.get_Mode();
+    }
+
+    public long getPrinterTimeInMillis(){
+        Calendar date = Calendar.getInstance();
+        date.setTimeInMillis(driver.get_Date().getTime());
+
+        Calendar time = Calendar.getInstance();
+        time.setTimeInMillis(driver.get_Time().getTime());
+
+        date.set(Calendar.HOUR_OF_DAY, time.get(Calendar.HOUR_OF_DAY));
+        date.set(Calendar.MINUTE, time.get(Calendar.MINUTE));
+        date.set(Calendar.SECOND, time.get(Calendar.SECOND));
+        return date.getTimeInMillis();
     }
 
     public boolean isSessionOpened() {
@@ -347,14 +357,31 @@ public class Printer {
         return new String(array);
     }
 
-    public boolean isConfigured() {
+    private DeviceSettings getConnectionSettings() {
         if (connectionSettings == null){
             connectionSettings = DeviceSettings.getInstance(settingsContainer.getSettingsConfig());
         }
-        return connectionSettings.isDeviceConfigured();
+        return connectionSettings;
+    }
+
+    public boolean isConfigured() {
+        return getConnectionSettings().isDeviceConfigured();
     }
 
     protected IFptr getDriver() {
         return driver;
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE){
+            if (data != null && data.getExtras() != null && data.getExtras().containsKey(SettingsActivity.DEVICE_SETTINGS)){
+                String settings = data.getExtras().getString(SettingsActivity.DEVICE_SETTINGS);
+
+                DeviceSettings deviceSettings = DeviceSettings.getInstance(settings);
+                if (deviceSettings.getError().isClear() && deviceSettings.isDeviceConfigured()){
+                    settingsContainer.saveDeviceSettings(deviceSettings);
+                }
+            }
+        }
     }
 }
