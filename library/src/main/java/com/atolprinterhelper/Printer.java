@@ -246,6 +246,8 @@ public class Printer {
             driver.CancelCheck();
             return getLastError();
         }
+
+        long checkTime = getPrinterTimeInMillis();
         int checkId = driver.get_CheckNumber();
         long timeStart = Calendar.getInstance().getTimeInMillis();
 
@@ -255,8 +257,9 @@ public class Printer {
         }
 
         long timeEnd = Calendar.getInstance().getTimeInMillis();
+        checkTime = checkTime + (timeEnd-timeStart);
 
-        cashCheck.setCheckTime(getPrinterTimeInMillis()/1000);
+        cashCheck.setCheckTime(checkTime);
         cashCheck.setCheckNumber(checkId);
 
 /*
@@ -284,13 +287,9 @@ public class Printer {
 
     PrintError getLastError() {
         if (driver != null){
-            String badParamDescription = driver.get_BadParamDescription();
-            badParamDescription = !badParamDescription.equals("")
-                            ?"("+ badParamDescription +")"
-                            : "";
             return new PrintError(
                     driver.get_ResultCode(),
-                    driver.get_ResultDescription() + badParamDescription
+                    driver.get_ResultDescription()
             );
         }
         return DefaultPrintError.FAIL.get();
