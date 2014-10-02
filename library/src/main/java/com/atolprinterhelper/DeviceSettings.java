@@ -35,13 +35,9 @@ public class DeviceSettings {
 
         if (settingsConfig != null){
             try {
-                // получаем фабрику
                 XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-                // включаем поддержку namespace (по умолчанию выключена)
                 factory.setNamespaceAware(true);
-                // создаем парсер
                 parser = factory.newPullParser();
-                // даем парсеру на вход Reader
                 parser.setInput(new StringReader(ds.settingsConfig));
             } catch (XmlPullParserException e) {
                 e.printStackTrace();
@@ -50,7 +46,6 @@ public class DeviceSettings {
 
         boolean hasData = false;
         if (parser != null){
-            String ELEMENT_SETTINGS = "settings";
             String TAG_VALUE = "value";
             String ATTRIBUTE_NAME = "name";
 
@@ -133,7 +128,7 @@ public class DeviceSettings {
 
         if (includeDeviceInfo) {
             if (!printer.isConnected()){
-                PrintError error = null;
+                PrintError error;
                 try {
                     error = printer.connectDevice();
                 } catch (IllegalAccessException e) {
@@ -233,5 +228,10 @@ public class DeviceSettings {
     public boolean isDeviceConfigured() {
         return deviceName != null && !deviceName.equals("") &&
                deviceAddress != null && !deviceAddress.equals("");
+    }
+
+    @Deprecated
+    public void setSettingsConfig(String settingsConfig) {
+        this.settingsConfig = settingsConfig;
     }
 }
