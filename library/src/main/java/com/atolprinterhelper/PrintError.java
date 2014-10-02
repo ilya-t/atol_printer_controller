@@ -9,6 +9,11 @@ public class PrintError {
     PrintError(DefaultPrintError error) {
         this.errorCode = error.code;
         this.errorDesc = error.description;
+
+    }
+    public PrintError(Exception error) {
+        this.errorCode = DefaultPrintError.FAIL.code;
+        this.errorDesc = error.getMessage() != null ? error.getMessage() : error.toString();
     }
 
     public PrintError(int code, String description) {

@@ -33,17 +33,19 @@ public class DeviceSettings {
         ds.settingsConfig = settingsConfig;
         XmlPullParser parser = null;
 
-        try {
-            // получаем фабрику
-            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-            // включаем поддержку namespace (по умолчанию выключена)
-            factory.setNamespaceAware(true);
-            // создаем парсер
-            parser = factory.newPullParser();
-            // даем парсеру на вход Reader
-            parser.setInput(new StringReader(ds.settingsConfig));
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
+        if (settingsConfig != null){
+            try {
+                // получаем фабрику
+                XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+                // включаем поддержку namespace (по умолчанию выключена)
+                factory.setNamespaceAware(true);
+                // создаем парсер
+                parser = factory.newPullParser();
+                // даем парсеру на вход Reader
+                parser.setInput(new StringReader(ds.settingsConfig));
+            } catch (XmlPullParserException e) {
+                e.printStackTrace();
+            }
         }
 
         boolean hasData = false;
@@ -131,7 +133,14 @@ public class DeviceSettings {
 
         if (includeDeviceInfo) {
             if (!printer.isConnected()){
-                PrintError error = printer.connectDevice();
+                PrintError error = null;
+                try {
+                    error = printer.connectDevice();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                    deviceSettings.error = new PrintError(e);
+                    return deviceSettings;
+                }
 
                 if (!error.isClear()){
                     deviceSettings.error = error;

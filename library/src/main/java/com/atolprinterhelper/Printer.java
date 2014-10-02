@@ -104,18 +104,26 @@ public class Printer {
                                 ?(SettingsContainer)this
                                 :new DefaultSettingsContainer(context);
         if (driver == null){
-            driver = new IFptr();
-            try {
-                driver.create(context);
-            } catch (NullPointerException e) {
-                e.printStackTrace();
-                driver = null;
-                throw new IllegalAccessException("unable to access printer driver: "+
-                        (e.getMessage() != null ? e.getMessage() : e.toString()));
-            }
-
-            driver.put_DeviceEnabled(false);
+            initDriver();
         }
+    }
+
+    private void initDriver() throws IllegalAccessException {
+        if (driver != null){
+            driver.destroy();
+            driver = null;
+        }
+        driver = new IFptr();
+        try {
+            driver.create(context);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            driver = null;
+            throw new IllegalAccessException("unable to access printer driver: "+
+                    (e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
+
+        driver.put_DeviceEnabled(false);
     }
 
 
@@ -131,18 +139,35 @@ public class Printer {
     }
 
 
-    public PrintError connectDevice() {
-        if (driver.put_DeviceSettings(settingsContainer.getSettingsConfig()) != 0){
+    public PrintError connectDevice() throws IllegalAccessException {
+        String settingsConfig = settingsContainer.getSettingsConfig();
+
+        PrintError error = tryConnect(settingsConfig);
+
+        if (error.isClear() && !isConnected()){
+            initDriver();
+
+            error = tryConnect(settingsConfig);
+
+
+            if (error.isClear() && !isConnected()){
+                error = DefaultPrintError.DEVICE_CONNECTION.get();
+            }
+        }
+
+        if (!error.isClear()){
+            driver.put_DeviceEnabled(false);
+        }
+
+        return error;
+    }
+
+    private PrintError tryConnect(String settingsConfig){
+        if (driver.put_DeviceSettings(settingsConfig) != 0){
             return getLastError();
         }
 
-        if (driver.put_DeviceEnabled(true) != 0){
-            return getLastError();
-        }
-
-//        connectionSettings = getDeviceSettings();
-
-        return DefaultPrintError.SUCCESS.get();
+        return driver.put_DeviceEnabled(true) != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
     }
 
     public PrintError setMode(final int mode){
@@ -288,7 +313,9 @@ public class Printer {
     PrintError getLastError() {
         if (driver != null){
             PrintError lastError = new PrintError(driver.get_ResultCode(), driver.get_ResultDescription());
-            if (lastError.getErrorCode() == DefaultPrintError.DEVICE_DISCONNECT.code){
+            if (
+                    lastError.getErrorCode() == DefaultPrintError.DEVICE_DISCONNECT.code ||
+                    lastError.getErrorCode() == DefaultPrintError.DEVICE_CONNECTION.code){
                 driver.put_DeviceEnabled(false);
             }
             return lastError;
