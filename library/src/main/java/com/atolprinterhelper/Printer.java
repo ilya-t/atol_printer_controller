@@ -128,9 +128,11 @@ public class Printer {
 
 
     /** launches Settings activity inside printer service app */
-    public static void configure(Activity activity) {
+    public void configure(Activity activity) {
         Intent intent = new Intent(activity, SettingsActivity.class);
-//        intent.putExtra(SettingsActivity.DEVICE_SETTINGS, printer.get_DeviceSettings());
+        if (getConnectionSettings().isDeviceConfigured()){
+            intent.putExtra(SettingsActivity.DEVICE_SETTINGS, getConnectionSettings().getSettingsConfig());
+        }
         activity.startActivityForResult(intent, REQUEST_CODE);
     }
 
