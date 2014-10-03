@@ -90,7 +90,7 @@ public class Printer {
     private SettingsContainer settingsContainer;
     private DeviceSettings connectionSettings;
 
-    public synchronized static Printer getInstance(Context context) throws IllegalAccessException{
+    public synchronized static Printer getInstance(Context context){
         if (instance == null){
             instance = new Printer(context);
         }
@@ -98,13 +98,17 @@ public class Printer {
         return instance;
     }
 
-    protected Printer(Context context) throws IllegalAccessException{
+    protected Printer(Context context){
         this.context = context;
         settingsContainer = (this instanceof SettingsContainer)
                                 ?(SettingsContainer)this
                                 :new DefaultSettingsContainer(context);
         if (driver == null){
-            initDriver();
+            try {
+                initDriver();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -122,6 +126,7 @@ public class Printer {
             throw new IllegalAccessException("unable to access printer driver: "+
                     (e.getMessage() != null ? e.getMessage() : e.toString()));
         }
+
 
         driver.put_DeviceEnabled(false);
     }
@@ -141,13 +146,17 @@ public class Printer {
     }
 
 
-    public PrintError connectDevice() throws IllegalAccessException {
+    public PrintError connectDevice(){
         String settingsConfig = settingsContainer.getSettingsConfig();
 
         PrintError error = tryConnect(settingsConfig);
 
         if (error.isClear() && !isConnected()){
-            initDriver();
+            try {
+                initDriver();
+            } catch (IllegalAccessException e) {
+                return new PrintError(e);
+            }
 
             error = tryConnect(settingsConfig);
 

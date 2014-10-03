@@ -128,14 +128,7 @@ public class DeviceSettings {
 
         if (includeDeviceInfo) {
             if (!printer.isConnected()){
-                PrintError error;
-                try {
-                    error = printer.connectDevice();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                    deviceSettings.error = new PrintError(e);
-                    return deviceSettings;
-                }
+                PrintError error = printer.connectDevice();
 
                 if (!error.isClear()){
                     deviceSettings.error = error;
