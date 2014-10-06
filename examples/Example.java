@@ -28,6 +28,8 @@ public class Example extends Activity{
             ));
 
             printer.printCheck(check, Printer.CHECK_TYPE_SALE);
+            printer.disconnectDevice();
+            printer.terminateInstance();
         }else{
             printer.configure(activity);
         }

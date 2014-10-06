@@ -1,8 +1,6 @@
 package com.atolprinterhelper;
 
-public class PrintError {
-
-
+public class PrintError{
     private int errorCode;
     private String errorDesc;
 

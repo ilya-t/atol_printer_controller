@@ -7,8 +7,10 @@ import android.content.Intent;
 import com.atol.drivers.fptr.IFptr;
 import com.atol.drivers.fptr.settings.SettingsActivity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
 public class Printer {
@@ -21,9 +23,9 @@ public class Printer {
     /**Отчет по секциям*/
     public static final int REPORT_TYPE_SECTIONS = 7;
 
-    protected static final int TEXT_ALIGNMENT_LEFT = 0;
-    protected static final int TEXT_ALIGNMENT_CENTER = 1;
-    protected static final int TEXT_ALIGNMENT_RIGHT = 2;
+    protected static final int ALIGNMENT_LEFT = 0;
+    protected static final int ALIGNMENT_CENTER = 1;
+    protected static final int ALIGNMENT_RIGHT = 2;
 
     protected static final int TEXT_WRAP_DISABLED = 0;
     protected static final int TEXT_WRAP_WORD = 1;
@@ -37,6 +39,8 @@ public class Printer {
     public static final int MODE_XREPORT = 2;
     /**Z-отчет*/
     public static final int MODE_ZREPORT = 3;
+    /**Программирование*/
+    public static final int MODE_PROGRAMMING = 4;
 
     /** Чек продажи*/
     public static final int CHECK_TYPE_SALE = 1;
@@ -51,8 +55,6 @@ public class Printer {
     /** Чек аннулирования покупки*/
     public static final int CHECK_TYPE_PURCHASE_ANNULATE = 6;
 
-    /**Чек закрыт*/
-    public static final int CHECK_STATE_CLOSED = 0;
     /**Чек продажи*/
     public static final int CHECK_STATE_SALE = 1;
     /**Чек возврата*/
@@ -178,7 +180,7 @@ public class Printer {
             return getLastError();
         }
 
-        return driver.put_DeviceEnabled(true) != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
+        return getMethodError(driver.put_DeviceEnabled(true));
     }
 
     public PrintError setMode(final int mode){
@@ -191,11 +193,11 @@ public class Printer {
     }
 
     public PrintError resetMode(){
-        return  driver.ResetMode() != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
+        return getMethodError(driver.ResetMode());
     }
 
     public PrintError cancelCheck(){
-        return  driver.CancelCheck() != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
+        return getMethodError(driver.CancelCheck());
     }
 
     public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck, final int checkType){
@@ -337,15 +339,14 @@ public class Printer {
     public PrintError printString(final String line) {
         driver.put_TextWrap(TEXT_WRAP_WORD);
         driver.put_Caption(line);
-        driver.put_Alignment(TEXT_ALIGNMENT_LEFT);
+        driver.put_Alignment(ALIGNMENT_LEFT);
 
-        int errorCode = driver.PrintString();
-        return errorCode != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
+        return getMethodError(driver.PrintString());
     }
 
     public PrintError report(final int reportType){
         driver.put_ReportType(reportType);
-        return driver.Report() != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
+        return getMethodError(driver.Report());
     }
 
     /** disconnects from printer device */
@@ -422,4 +423,44 @@ public class Printer {
             }
         }
     }
+
+    public List<PrinterPicture> getPictureList(){
+        List<PrinterPicture> list;
+        if (driver.GetPictureArrayStatus() == 0){
+            int pictureCount = driver.get_PictureNumber();
+            list = new ArrayList<>(pictureCount);
+
+            for (int i = 0; i < pictureCount; i++) {
+                driver.put_PictureNumber(i+1);
+
+                if (driver.GetPictureStatus() == 0){
+                    list.add(new PrinterPicture(driver));
+                }else{
+                    list.clear();
+                    return list;
+                }
+            }
+        }else{
+            list = Collections.emptyList();
+        }
+
+        return list;
+    }
+
+    public PrintError addPicture(String file){
+        driver.put_FileName(file);
+        return getMethodError(driver.AddPictureFromFile());
+    }
+
+    public PrintError printPicture(int number, int leftMargin){
+        driver.put_PictureNumber(number);
+        driver.put_LeftMargin(leftMargin);
+        return getMethodError(driver.PrintPictureByNumber());
+    }
+
+
+    private PrintError getMethodError(int methodResult){
+        return methodResult != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
+    }
+
 }
