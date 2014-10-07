@@ -8,9 +8,12 @@ import java.io.IOException;
 import java.io.StringReader;
 
 public class DeviceSettings {
-    public final static int CONNECTION_BASIC = 1;//обычное подключение
-    public final static int CONNECTION_UNSAFE = 2;//небезопасное подключение
-    public final static int CONNECTION_OTHER = 3;//альтернативное подключение
+    /** обычное подключение */
+    public final static int CONNECTION_BASIC = 1;
+    /** небезопасное подключение */
+    public final static int CONNECTION_UNSAFE = 2;
+    /** альтернативное подключение */
+    public final static int CONNECTION_OTHER = 3;
 
     private String transport;
     private boolean autoEnableBluetooth;
