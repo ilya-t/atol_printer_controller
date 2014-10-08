@@ -143,11 +143,13 @@ public class Printer {
         activity.startActivityForResult(intent, REQUEST_CODE);
     }
 
+    /** @return true if connected to printer */
     public boolean isConnected() {
         return driver != null && driver.get_DeviceEnabled();
     }
 
 
+    /** connects to currently configured device */
     public PrintError connectDevice(){
         String settingsConfig = settingsContainer.getSettingsConfig();
 
@@ -183,6 +185,14 @@ public class Printer {
         return getMethodError(driver.put_DeviceEnabled(true));
     }
 
+    /** sets printer mode.<br>
+     * List of available modes:<br>
+     * {@link com.atolprinterhelper.Printer#MODE_CHOICE}<br>
+     * {@link com.atolprinterhelper.Printer#MODE_REGISTRATION}<br>
+     * {@link com.atolprinterhelper.Printer#MODE_XREPORT}<br>
+     * {@link com.atolprinterhelper.Printer#MODE_ZREPORT}<br>
+     * {@link com.atolprinterhelper.Printer#MODE_PROGRAMMING}<br>
+     **/
     public PrintError setMode(final int mode){
         driver.put_UserPassword(getConnectionSettings().getUserPassword());
         driver.put_Mode(mode);
@@ -192,14 +202,26 @@ public class Printer {
         return DefaultPrintError.SUCCESS.get();
     }
 
+    /** resets mode to {@link com.atolprinterhelper.Printer#MODE_CHOICE} */
     public PrintError resetMode(){
         return getMethodError(driver.ResetMode());
     }
 
+    /** cancels (prints "CHECK ANNULATE") currently opened check*/
     public PrintError cancelCheck(){
         return getMethodError(driver.CancelCheck());
     }
 
+    /** Prints check.
+     * @param cashCheck check instance
+     * @param checkType type of check. list of available check types:<br>
+     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_SALE}<br>
+     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_REFUND}<br>
+     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_ANNULATE}<br>
+     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_PURCHASE}<br>
+     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_PURCHASE_REFUND}<br>
+     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_PURCHASE_ANNULATE}<br>
+     **/
     public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck, final int checkType){
         PrintError error = cashCheck.verify();
         if (!error.isClear()) {
@@ -344,6 +366,12 @@ public class Printer {
         return getMethodError(driver.PrintString());
     }
 
+    /** prints report. List of available report types: <br>
+     * {@link com.atolprinterhelper.Printer#REPORT_TYPE_TAPE_DAMPING}<br>
+     * {@link com.atolprinterhelper.Printer#REPORT_TYPE_DAILY_DAMPING}<br>
+     * {@link com.atolprinterhelper.Printer#REPORT_TYPE_DAILY}<br>
+     * {@link com.atolprinterhelper.Printer#REPORT_TYPE_SECTIONS}<br>
+     * */
     public PrintError report(final int reportType){
         driver.put_ReportType(reportType);
         return getMethodError(driver.Report());
@@ -354,6 +382,7 @@ public class Printer {
         driver.put_DeviceEnabled(false);
     }
 
+    /** destroys Printer singleton and driver instances*/
     public void terminateInstance(){
         driver.destroy();
         instance = null;
@@ -419,6 +448,9 @@ public class Printer {
                 DeviceSettings deviceSettings = DeviceSettings.getInstance(settings);
                 if (deviceSettings.getError().isClear() && deviceSettings.isDeviceConfigured()){
                     settingsContainer.saveDeviceSettings(deviceSettings);
+                    if (!getConnectionSettings().isDeviceConfigured()){
+                        connectionSettings = deviceSettings;
+                    }
                 }
             }
         }
