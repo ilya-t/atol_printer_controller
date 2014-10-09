@@ -46,13 +46,13 @@ public class Printer {
     public static final int CHECK_TYPE_SALE = 1;
     /** Чек возврата*/
     public static final int CHECK_TYPE_REFUND = 2;
-    /** Чек аннулирования*/
+    /** Чек аннулирования (не поддерживается устройством)*/@Deprecated
     public static final int CHECK_TYPE_ANNULATE = 3;
     /** Чек покупки*/
     public static final int CHECK_TYPE_PURCHASE = 4;
     /** Чек возврата покупки*/
     public static final int CHECK_TYPE_PURCHASE_REFUND = 5;
-    /** Чек аннулирования покупки*/
+    /** Чек аннулирования покупки (не поддерживается устройством)*/@Deprecated
     public static final int CHECK_TYPE_PURCHASE_ANNULATE = 6;
 
     /**Чек продажи*/

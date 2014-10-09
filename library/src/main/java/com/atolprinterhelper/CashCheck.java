@@ -7,6 +7,7 @@ public class CashCheck<T extends CheckItem> {
     protected final static int CHECK_NUMBER_UNKNOWN = -1;
     private static final double MAX_TOTAL = 40*1000*1000;
     private static final int ERROR_CODE_WRONG_SUM = 18;
+    private static final int ERROR_CODE_WRONG_COUNT = 19;
 
     private int paymentType;
     private List<T> itemList = new ArrayList<>();
@@ -34,6 +35,10 @@ public class CashCheck<T extends CheckItem> {
 
         if (totalSum > MAX_TOTAL){
             return new PrintError(ERROR_CODE_WRONG_SUM, "Некорректная итоговая сумма - "+ String.valueOf(totalSum));
+        }
+
+        if (itemList.size() == 0){
+            return new PrintError(ERROR_CODE_WRONG_COUNT, "В чеке отсутствуют позиции");
         }
 
         return DefaultPrintError.SUCCESS.get();
