@@ -1,4 +1,4 @@
-package com.atolprinterhelper;
+package com.printerhelper.atol;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;

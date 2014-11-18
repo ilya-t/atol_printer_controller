@@ -1,4 +1,4 @@
-package com.atolprinterhelper;
+package com.printerhelper.atol;
 
 import com.atol.drivers.fptr.IFptr;
 

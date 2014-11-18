@@ -2,9 +2,9 @@ package com.example;
 
 import android.app.Activity;
 
-import com.atolprinterhelper.CashCheck;
-import com.atolprinterhelper.CheckItem;
-import com.atolprinterhelper.Printer;
+import com.printerhelper.atol.CashCheck;
+import com.printerhelper.atol.CheckItem;
+import com.printerhelper.atol.Printer;
 
 import java.text.DateFormat;
 import java.util.Arrays;

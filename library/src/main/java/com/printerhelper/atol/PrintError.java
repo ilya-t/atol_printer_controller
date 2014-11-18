@@ -1,4 +1,4 @@
-package com.atolprinterhelper;
+package com.printerhelper.atol;
 
 public class PrintError{
     private int errorCode;

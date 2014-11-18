@@ -1,4 +1,4 @@
-package com.atolprinterhelper;
+package com.printerhelper.atol;
 
 import android.content.Context;
 import android.content.SharedPreferences;

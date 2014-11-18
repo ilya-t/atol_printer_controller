@@ -1,4 +1,4 @@
-package com.atolprinterhelper;
+package com.printerhelper.atol;
 
 public enum DefaultPrintError {
     //Default error codes according to Printer driver

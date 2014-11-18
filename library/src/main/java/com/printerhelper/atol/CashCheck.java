@@ -1,4 +1,4 @@
-package com.atolprinterhelper;
+package com.printerhelper.atol;
 
 import java.util.ArrayList;
 import java.util.List;

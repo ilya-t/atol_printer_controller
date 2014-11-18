@@ -1,4 +1,4 @@
-package com.atolprinterhelper;
+package com.printerhelper.atol;
 
 import android.app.Activity;
 import android.content.Context;
@@ -187,11 +187,11 @@ public class Printer {
 
     /** sets printer mode.<br>
      * List of available modes:<br>
-     * {@link com.atolprinterhelper.Printer#MODE_CHOICE}<br>
-     * {@link com.atolprinterhelper.Printer#MODE_REGISTRATION}<br>
-     * {@link com.atolprinterhelper.Printer#MODE_XREPORT}<br>
-     * {@link com.atolprinterhelper.Printer#MODE_ZREPORT}<br>
-     * {@link com.atolprinterhelper.Printer#MODE_PROGRAMMING}<br>
+     * {@link Printer#MODE_CHOICE}<br>
+     * {@link Printer#MODE_REGISTRATION}<br>
+     * {@link Printer#MODE_XREPORT}<br>
+     * {@link Printer#MODE_ZREPORT}<br>
+     * {@link Printer#MODE_PROGRAMMING}<br>
      **/
     public PrintError setMode(final int mode){
         driver.put_UserPassword(getConnectionSettings().getUserPassword());
@@ -202,7 +202,7 @@ public class Printer {
         return DefaultPrintError.SUCCESS.get();
     }
 
-    /** resets mode to {@link com.atolprinterhelper.Printer#MODE_CHOICE} */
+    /** resets mode to {@link Printer#MODE_CHOICE} */
     public PrintError resetMode(){
         return getMethodError(driver.ResetMode());
     }
@@ -215,12 +215,12 @@ public class Printer {
     /** Prints check.
      * @param cashCheck check instance
      * @param checkType type of check. list of available check types:<br>
-     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_SALE}<br>
-     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_REFUND}<br>
-     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_ANNULATE}<br>
-     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_PURCHASE}<br>
-     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_PURCHASE_REFUND}<br>
-     * {@link com.atolprinterhelper.Printer#CHECK_TYPE_PURCHASE_ANNULATE}<br>
+     * {@link Printer#CHECK_TYPE_SALE}<br>
+     * {@link Printer#CHECK_TYPE_REFUND}<br>
+     * {@link Printer#CHECK_TYPE_ANNULATE}<br>
+     * {@link Printer#CHECK_TYPE_PURCHASE}<br>
+     * {@link Printer#CHECK_TYPE_PURCHASE_REFUND}<br>
+     * {@link Printer#CHECK_TYPE_PURCHASE_ANNULATE}<br>
      **/
     public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck, final int checkType){
         PrintError error = cashCheck.verify();
@@ -367,10 +367,10 @@ public class Printer {
     }
 
     /** prints report. List of available report types: <br>
-     * {@link com.atolprinterhelper.Printer#REPORT_TYPE_TAPE_DAMPING}<br>
-     * {@link com.atolprinterhelper.Printer#REPORT_TYPE_DAILY_DAMPING}<br>
-     * {@link com.atolprinterhelper.Printer#REPORT_TYPE_DAILY}<br>
-     * {@link com.atolprinterhelper.Printer#REPORT_TYPE_SECTIONS}<br>
+     * {@link Printer#REPORT_TYPE_TAPE_DAMPING}<br>
+     * {@link Printer#REPORT_TYPE_DAILY_DAMPING}<br>
+     * {@link Printer#REPORT_TYPE_DAILY}<br>
+     * {@link Printer#REPORT_TYPE_SECTIONS}<br>
      * */
     public PrintError report(final int reportType){
         driver.put_ReportType(reportType);

@@ -14,7 +14,7 @@ android {
     buildToolsVersion "19.1.0"
 
     defaultConfig {
-        applicationId "com.atolprinterhelper"
+        applicationId "com.atolprinterhelper.atol"
         minSdkVersion 9
         targetSdkVersion 14
         versionCode 1
