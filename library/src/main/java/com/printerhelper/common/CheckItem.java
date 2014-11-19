@@ -1,4 +1,4 @@
-package com.printerhelper.atol;
+package com.printerhelper.common;
 
 import java.util.List;
 
@@ -56,7 +56,7 @@ public class CheckItem {
         this.headers = headers;
     }
 
-    List<String> getHeaders() {
+    public List<String> getHeaders() {
         return headers;
     }
 }

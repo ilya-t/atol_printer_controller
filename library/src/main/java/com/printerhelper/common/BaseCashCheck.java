@@ -1,21 +1,21 @@
-package com.printerhelper.atol;
+package com.printerhelper.common;
+
+import com.printerhelper.atol.DefaultPrintError;
+import com.printerhelper.atol.PrintError;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CashCheck<T extends CheckItem> {
+public class BaseCashCheck<T extends CheckItem> {
     protected final static int CHECK_NUMBER_UNKNOWN = -1;
-    private static final double MAX_TOTAL = 40*1000*1000;
-    private static final int ERROR_CODE_WRONG_SUM = 18;
     private static final int ERROR_CODE_WRONG_COUNT = 19;
-
     private String paymentType;
     private List<T> itemList = new ArrayList<>();
     private List<String> headers;
     private int checkNumber = CHECK_NUMBER_UNKNOWN;
     private long checkTime;
 
-    public CashCheck(String paymentType) {
+    public BaseCashCheck(String paymentType) {
         this.paymentType = paymentType;
     }
 
@@ -23,20 +23,11 @@ public class CashCheck<T extends CheckItem> {
         return itemList;
     }
 
-    void setCheckNumber(int checkId) {
+    public void setCheckNumber(int checkId) {
         this.checkNumber = checkId;
     }
 
-    PrintError verify() {
-        double totalSum = 0;
-        for (CheckItem checkItem : itemList){
-            totalSum += checkItem.getPrice() * checkItem.getQuantity();
-        }
-
-        if (totalSum > MAX_TOTAL){
-            return new PrintError(ERROR_CODE_WRONG_SUM, "Некорректная итоговая сумма - "+ String.valueOf(totalSum));
-        }
-
+    protected BasePrintError verify() {
         if (itemList.size() == 0){
             return new PrintError(ERROR_CODE_WRONG_COUNT, "В чеке отсутствуют позиции");
         }
@@ -56,7 +47,7 @@ public class CashCheck<T extends CheckItem> {
         return checkTime;
     }
 
-    protected void setCheckTime(long checkTimeInMillis) {
+    public void setCheckTime(long checkTimeInMillis) {
         this.checkTime = checkTimeInMillis/1000;
     }
 
@@ -64,7 +55,7 @@ public class CashCheck<T extends CheckItem> {
         this.headers = headers;
     }
 
-    List<String> getHeaders() {
+    public List<String> getHeaders() {
         return headers;
     }
 }

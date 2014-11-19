@@ -6,8 +6,10 @@ import android.content.Intent;
 
 import com.atol.drivers.fptr.IFptr;
 import com.atol.drivers.fptr.settings.SettingsActivity;
+import com.printerhelper.common.BaseCashCheck;
 import com.printerhelper.common.BasePrintError;
 import com.printerhelper.common.BasePrinter;
+import com.printerhelper.common.CheckItem;
 import com.printerhelper.common.SettingsContainer;
 
 import java.util.ArrayList;
@@ -16,7 +18,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
-public class Printer implements BasePrinter {
+public class AtolPrinter implements BasePrinter {
     /**Гашение контрольной ленты*/
     public static final int REPORT_TYPE_TAPE_DAMPING = 0;
     /**Суточный отчет с гашением*/
@@ -85,7 +87,7 @@ public class Printer implements BasePrinter {
     public static final int PAYMENT_TYPE_9 = 9;
     public static final int PAYMENT_TYPE_10 = 10;
 
-    private static Printer instance;
+    private static AtolPrinter instance;
 
     private static final int REQUEST_CODE = 38921;
     final Context context;
@@ -95,15 +97,15 @@ public class Printer implements BasePrinter {
     private SettingsContainer settingsContainer;
     private DeviceSettings connectionSettings;
 
-    public synchronized static Printer getInstance(Context context){
+    public synchronized static AtolPrinter getInstance(Context context){
         if (instance == null){
-            instance = new Printer(context);
+            instance = new AtolPrinter(context);
         }
 
         return instance;
     }
 
-    protected Printer(Context context){
+    protected AtolPrinter(Context context){
         this.context = context;
         settingsContainer = (this instanceof SettingsContainer)
                                 ?(SettingsContainer)this
@@ -205,11 +207,11 @@ public class Printer implements BasePrinter {
 
     /** sets printer mode.<br>
      * List of available modes:<br>
-     * {@link Printer#MODE_CHOICE}<br>
-     * {@link Printer#MODE_REGISTRATION}<br>
-     * {@link Printer#MODE_XREPORT}<br>
-     * {@link Printer#MODE_ZREPORT}<br>
-     * {@link Printer#MODE_PROGRAMMING}<br>
+     * {@link AtolPrinter#MODE_CHOICE}<br>
+     * {@link AtolPrinter#MODE_REGISTRATION}<br>
+     * {@link AtolPrinter#MODE_XREPORT}<br>
+     * {@link AtolPrinter#MODE_ZREPORT}<br>
+     * {@link AtolPrinter#MODE_PROGRAMMING}<br>
      **/
     public PrintError setMode(final int mode){
         driver.put_UserPassword(getConnectionSettings().getUserPassword());
@@ -220,7 +222,7 @@ public class Printer implements BasePrinter {
         return DefaultPrintError.SUCCESS.get();
     }
 
-    /** resets mode to {@link Printer#MODE_CHOICE} */
+    /** resets mode to {@link AtolPrinter#MODE_CHOICE} */
     public PrintError resetMode(){
         return getMethodError(driver.ResetMode());
     }
@@ -234,23 +236,23 @@ public class Printer implements BasePrinter {
     /** Prints check.
      * @param cashCheck check instance
      * @param checkType type of check. list of available check types:<br>
-     * {@link Printer#CHECK_TYPE_SALE}<br>
-     * {@link Printer#CHECK_TYPE_REFUND}<br>
-     * {@link Printer#CHECK_TYPE_ANNULATE}<br>
-     * {@link Printer#CHECK_TYPE_PURCHASE}<br>
-     * {@link Printer#CHECK_TYPE_PURCHASE_REFUND}<br>
-     * {@link Printer#CHECK_TYPE_PURCHASE_ANNULATE}<br>
+     * {@link AtolPrinter#CHECK_TYPE_SALE}<br>
+     * {@link AtolPrinter#CHECK_TYPE_REFUND}<br>
+     * {@link AtolPrinter#CHECK_TYPE_ANNULATE}<br>
+     * {@link AtolPrinter#CHECK_TYPE_PURCHASE}<br>
+     * {@link AtolPrinter#CHECK_TYPE_PURCHASE_REFUND}<br>
+     * {@link AtolPrinter#CHECK_TYPE_PURCHASE_ANNULATE}<br>
      **/
     @Override
-    public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck, final CheckType checkType){
-        PrintError error = cashCheck.verify();
+    public PrintError printCheck(final BaseCashCheck<? extends CheckItem> cashCheck, final CheckType checkType){
+        PrintError error;
 
-        if (!error.isClear()) {
-            return error;
+        if (cashCheck.getItemList().size() == 0){
+            return new PrintError(DefaultPrintError.FAIL.code, "В чеке отсутствуют позиции");
         }
 
-        if (getMode() != Printer.MODE_REGISTRATION) {
-            error = setMode(Printer.MODE_REGISTRATION);
+        if (getMode() != AtolPrinter.MODE_REGISTRATION) {
+            error = setMode(AtolPrinter.MODE_REGISTRATION);
             if (!error.isClear()) {
                 return error;
             }
@@ -420,10 +422,10 @@ public class Printer implements BasePrinter {
     }
 
     /** prints report. List of available report types: <br>
-     * {@link Printer#REPORT_TYPE_TAPE_DAMPING}<br>
-     * {@link Printer#REPORT_TYPE_DAILY_DAMPING}<br>
-     * {@link Printer#REPORT_TYPE_DAILY}<br>
-     * {@link Printer#REPORT_TYPE_SECTIONS}<br>
+     * {@link AtolPrinter#REPORT_TYPE_TAPE_DAMPING}<br>
+     * {@link AtolPrinter#REPORT_TYPE_DAILY_DAMPING}<br>
+     * {@link AtolPrinter#REPORT_TYPE_DAILY}<br>
+     * {@link AtolPrinter#REPORT_TYPE_SECTIONS}<br>
      * */
     public PrintError report(final int reportType){
         int reportMode = reportType == REPORT_TYPE_DAILY_DAMPING ? MODE_ZREPORT : MODE_XREPORT;
@@ -452,8 +454,8 @@ public class Printer implements BasePrinter {
     }
 
     @Override
-    public BasePrintError applyDeviceInfo(final String deviceSettings) {
-        return driver.put_DeviceSettings(deviceSettings) != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
+    public BasePrintError applyDeviceInfo(final String deviceInfo) {
+        return driver.put_DeviceSettings(deviceInfo) != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
     }
 
     @Override

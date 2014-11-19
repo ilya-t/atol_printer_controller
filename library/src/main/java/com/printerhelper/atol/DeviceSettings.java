@@ -127,13 +127,13 @@ public class DeviceSettings implements BasePrinterInfo {
         return ds;
     }
 
-    public static DeviceSettings getInstance(Printer printer, final boolean includeDeviceInfo){
-        final DeviceSettings deviceSettings = getInstance(printer.getDriver().get_DeviceSettings());
+    public static DeviceSettings getInstance(AtolPrinter atolPrinter, final boolean includeDeviceInfo){
+        final DeviceSettings deviceSettings = getInstance(atolPrinter.getDriver().get_DeviceSettings());
 
 
         if (includeDeviceInfo) {
-            if (!printer.isConnected()){
-                PrintError error = printer.connectDevice();
+            if (!atolPrinter.isConnected()){
+                PrintError error = atolPrinter.connectDevice();
 
                 if (!error.isClear()){
                     deviceSettings.error = error;
@@ -141,24 +141,24 @@ public class DeviceSettings implements BasePrinterInfo {
                 }
             }
 
-            if (printer.getDriver().GetStatus() != 0){
-                deviceSettings.error = printer.getLastError();
+            if (atolPrinter.getDriver().GetStatus() != 0){
+                deviceSettings.error = atolPrinter.getLastError();
                 return deviceSettings;
             }
 
-            deviceSettings.serialNumber = printer.getDriver().get_SerialNumber();
+            deviceSettings.serialNumber = atolPrinter.getDriver().get_SerialNumber();
 
             if (deviceSettings.serialNumber == null || deviceSettings.serialNumber.equals("")) {
-                PrintError printError = printer.setMode(Printer.MODE_CHOICE);
+                PrintError printError = atolPrinter.setMode(AtolPrinter.MODE_CHOICE);
 
                 if (!printError.isClear()){
                     deviceSettings.error = printError;
                 }
-                deviceSettings.serialNumber = printer.getDriver().get_SerialNumber();
+                deviceSettings.serialNumber = atolPrinter.getDriver().get_SerialNumber();
             }
 
 
-            deviceSettings.dateTime = printer.getPrinterTimeInMillis()/1000;
+            deviceSettings.dateTime = atolPrinter.getPrinterTimeInMillis()/1000;
         }
         return deviceSettings;
     }

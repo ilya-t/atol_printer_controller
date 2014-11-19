@@ -3,9 +3,6 @@ package com.printerhelper.common;
 import android.app.Activity;
 import android.content.Intent;
 
-import com.printerhelper.atol.CashCheck;
-import com.printerhelper.atol.CheckItem;
-
 public interface BasePrinter{
     public enum CheckType{
         SALE, REFUND, ANNULATE, PURCHASE, PURCHASE_REFUND, PURCHASE_ANNULATE
@@ -15,14 +12,14 @@ public interface BasePrinter{
     boolean isConnected();
     BasePrintError connectDevice();
     BasePrintError cancelCheck();
-    BasePrintError printCheck(final CashCheck<? extends CheckItem> cashCheck, final CheckType checkType);
+    BasePrintError printCheck(final BaseCashCheck<? extends CheckItem> cashCheck, final CheckType checkType);
     BasePrintError printString(final String line);
     BasePrintError reportX();
     BasePrintError reportZ();
     void disconnectDevice();
     void terminateInstance();
 
-    BasePrintError applyDeviceInfo(final String deviceSettings);
+    BasePrintError applyDeviceInfo(final String deviceInfo);
     BasePrinterInfo getDeviceInfo();
 
     long getPrinterTimeInMillis();
