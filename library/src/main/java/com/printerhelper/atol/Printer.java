@@ -6,6 +6,8 @@ import android.content.Intent;
 
 import com.atol.drivers.fptr.IFptr;
 import com.atol.drivers.fptr.settings.SettingsActivity;
+import com.printerhelper.common.BasePrintError;
+import com.printerhelper.common.BasePrinter;
 import com.printerhelper.common.SettingsContainer;
 
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
-public class Printer {
+public class Printer implements BasePrinter {
     /**Гашение контрольной ленты*/
     public static final int REPORT_TYPE_TAPE_DAMPING = 0;
     /**Суточный отчет с гашением*/
@@ -136,6 +138,7 @@ public class Printer {
 
 
     /** launches Settings activity inside printer service app */
+    @Override
     public void configure(Activity activity) {
         Intent intent = new Intent(activity, SettingsActivity.class);
         if (getConnectionSettings().isDeviceConfigured()){
@@ -145,12 +148,14 @@ public class Printer {
     }
 
     /** @return true if connected to printer */
+    @Override
     public boolean isConnected() {
         return driver != null && driver.get_DeviceEnabled();
     }
 
 
     /** connects to currently configured device */
+    @Override
     public PrintError connectDevice(){
         String settingsConfig = settingsContainer.getSettingsConfig();
 
@@ -186,6 +191,18 @@ public class Printer {
         return getMethodError(driver.put_DeviceEnabled(true));
     }
 
+    @Override
+    public BasePrintError reportX() {
+        return report(REPORT_TYPE_DAILY);
+    }
+
+    @Override
+    public BasePrintError reportZ() {
+        return report(REPORT_TYPE_DAILY_DAMPING);
+    }
+
+
+
     /** sets printer mode.<br>
      * List of available modes:<br>
      * {@link Printer#MODE_CHOICE}<br>
@@ -209,6 +226,7 @@ public class Printer {
     }
 
     /** cancels (prints "CHECK ANNULATE") currently opened check*/
+    @Override
     public PrintError cancelCheck(){
         return getMethodError(driver.CancelCheck());
     }
@@ -223,8 +241,21 @@ public class Printer {
      * {@link Printer#CHECK_TYPE_PURCHASE_REFUND}<br>
      * {@link Printer#CHECK_TYPE_PURCHASE_ANNULATE}<br>
      **/
-    public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck, final int checkType){
+    @Override
+    public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck, final CheckType checkType){
         PrintError error = cashCheck.verify();
+
+        if (!error.isClear()) {
+            return error;
+        }
+
+        if (getMode() != Printer.MODE_REGISTRATION) {
+            error = setMode(Printer.MODE_REGISTRATION);
+            if (!error.isClear()) {
+                return error;
+            }
+        }
+
         int paymentType;
         if (this instanceof AtolPaymentTypeParser){
             paymentType = ((AtolPaymentTypeParser)this).parseAtolPaymentType(cashCheck);
@@ -237,12 +268,19 @@ public class Printer {
             }
         }
 
+        int atolCheckType;
 
-        if (!error.isClear()) {
-            return error;
+        switch (checkType){
+            case SALE: atolCheckType = CHECK_TYPE_SALE; break;
+            case REFUND: atolCheckType = CHECK_TYPE_REFUND; break;
+            case ANNULATE: atolCheckType = CHECK_TYPE_ANNULATE; break;
+            case PURCHASE: atolCheckType = CHECK_TYPE_PURCHASE; break;
+            case PURCHASE_REFUND: atolCheckType = CHECK_TYPE_PURCHASE_REFUND; break;
+            case PURCHASE_ANNULATE: atolCheckType = CHECK_TYPE_PURCHASE_ANNULATE; break;
+            default: return new PrintError(DefaultPrintError.FAIL.code, "unknown check type: null");
         }
 
-        driver.put_CheckType(checkType);
+        driver.put_CheckType(atolCheckType);
         if (driver.OpenCheck() != 0){
             return getLastError();
         }
@@ -274,7 +312,7 @@ public class Printer {
 
             driver.put_TextWrap(TEXT_WRAP_WORD);
             int errorCode = 0;
-            switch (checkType) {
+            switch (atolCheckType) {
                 case CHECK_TYPE_SALE: {
                     errorCode = driver.Registration();
                 }break;
@@ -372,6 +410,7 @@ public class Printer {
         return DefaultPrintError.FAIL.get();
     }
 
+    @Override
     public PrintError printString(final String line) {
         driver.put_TextWrap(TEXT_WRAP_WORD);
         driver.put_Caption(line);
@@ -387,26 +426,38 @@ public class Printer {
      * {@link Printer#REPORT_TYPE_SECTIONS}<br>
      * */
     public PrintError report(final int reportType){
+        int reportMode = reportType == REPORT_TYPE_DAILY_DAMPING ? MODE_ZREPORT : MODE_XREPORT;
+        if (getMode() != reportMode){
+            PrintError error = setMode(reportMode);
+            if (!error.isClear()){
+                return error;
+            }
+        }
+
         driver.put_ReportType(reportType);
         return getMethodError(driver.Report());
     }
 
     /** disconnects from printer device */
+    @Override
     public void disconnectDevice() {
         driver.put_DeviceEnabled(false);
     }
 
     /** destroys Printer singleton and driver instances*/
+    @Override
     public void terminateInstance(){
         driver.destroy();
         instance = null;
     }
 
-    public PrintError applyDeviceSettings(final String deviceSettings) {
+    @Override
+    public BasePrintError applyDeviceInfo(final String deviceSettings) {
         return driver.put_DeviceSettings(deviceSettings) != 0 ? getLastError() : DefaultPrintError.SUCCESS.get();
     }
 
-    public DeviceSettings getDeviceSettings(){
+    @Override
+    public DeviceSettings getDeviceInfo(){
         return DeviceSettings.getInstance(this, true);
     }
 
@@ -414,6 +465,7 @@ public class Printer {
         return driver.get_Mode();
     }
 
+    @Override
     public long getPrinterTimeInMillis(){
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(driver.get_Date().getTime());
@@ -446,6 +498,7 @@ public class Printer {
         return connectionSettings;
     }
 
+    @Override
     public boolean isConfigured() {
         return getConnectionSettings().isDeviceConfigured();
     }
@@ -454,6 +507,7 @@ public class Printer {
         return driver;
     }
 
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE){
             if (data != null && data.getExtras() != null && data.getExtras().containsKey(SettingsActivity.DEVICE_SETTINGS)){
