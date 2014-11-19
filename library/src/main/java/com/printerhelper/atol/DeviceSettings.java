@@ -1,5 +1,7 @@
 package com.printerhelper.atol;
 
+import com.printerhelper.common.BasePrinterInfo;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -7,7 +9,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.IOException;
 import java.io.StringReader;
 
-public class DeviceSettings {
+public class DeviceSettings implements BasePrinterInfo {
     /** обычное подключение */
     public final static int CONNECTION_BASIC = 1;
     /** небезопасное подключение */
@@ -174,6 +176,7 @@ public class DeviceSettings {
     }
 
     /** @return MAC-address of device in format "AA-BB-CC-DD- EE-FF" */
+    @Override
     public String getDeviceAddress() {
         return deviceAddress;
     }
@@ -200,11 +203,13 @@ public class DeviceSettings {
     }
 
     /** @return printer serial number if device is connected*/
+    @Override
     public String getSerialNumber() {
         return serialNumber;
     }
 
     /** @return printer timestamp (since last status update) if device is connected*/
+    @Override
     public long getDateTime() {
         return dateTime;
     }
@@ -224,10 +229,5 @@ public class DeviceSettings {
     public boolean isDeviceConfigured() {
         return deviceName != null && !deviceName.equals("") &&
                deviceAddress != null && !deviceAddress.equals("");
-    }
-
-    @Deprecated
-    public void setSettingsConfig(String settingsConfig) {
-        this.settingsConfig = settingsConfig;
     }
 }

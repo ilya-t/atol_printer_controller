@@ -3,6 +3,8 @@ package com.printerhelper.atol;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.printerhelper.common.SettingsContainer;
+
 public class DefaultSettingsContainer implements SettingsContainer {
     private SharedPreferences preferences;
     private static final String PREFERENCES_FILE = "atol_device_settings";

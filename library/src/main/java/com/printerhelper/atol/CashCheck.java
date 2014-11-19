@@ -9,13 +9,13 @@ public class CashCheck<T extends CheckItem> {
     private static final int ERROR_CODE_WRONG_SUM = 18;
     private static final int ERROR_CODE_WRONG_COUNT = 19;
 
-    private int paymentType;
+    private String paymentType;
     private List<T> itemList = new ArrayList<>();
     private List<String> headers;
     private int checkNumber = CHECK_NUMBER_UNKNOWN;
     private long checkTime;
 
-    public CashCheck(int paymentType) {
+    public CashCheck(String paymentType) {
         this.paymentType = paymentType;
     }
 
@@ -44,7 +44,7 @@ public class CashCheck<T extends CheckItem> {
         return DefaultPrintError.SUCCESS.get();
     }
 
-    public int getPaymentType() {
+    public String getPaymentType() {
         return paymentType;
     }
 

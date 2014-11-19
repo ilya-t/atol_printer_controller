@@ -6,6 +6,7 @@ import android.content.Intent;
 
 import com.atol.drivers.fptr.IFptr;
 import com.atol.drivers.fptr.settings.SettingsActivity;
+import com.printerhelper.common.SettingsContainer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -224,6 +225,19 @@ public class Printer {
      **/
     public PrintError printCheck(final CashCheck<? extends CheckItem> cashCheck, final int checkType){
         PrintError error = cashCheck.verify();
+        int paymentType;
+        if (this instanceof AtolPaymentTypeParser){
+            paymentType = ((AtolPaymentTypeParser)this).parseAtolPaymentType(cashCheck);
+        }else{
+            try {
+                paymentType = Integer.parseInt(cashCheck.getPaymentType());
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                return new PrintError(DefaultPrintError.FAIL.code, "unknown payment type: "+cashCheck.getPaymentType());
+            }
+        }
+
+
         if (!error.isClear()) {
             return error;
         }
@@ -311,7 +325,7 @@ public class Printer {
         int checkId = driver.get_CheckNumber();
         long timeStart = Calendar.getInstance().getTimeInMillis();
 
-        driver.put_TypeClose(cashCheck.getPaymentType());
+        driver.put_TypeClose(paymentType);
         if (driver.CloseCheck() != 0){
             return getLastError();
         }

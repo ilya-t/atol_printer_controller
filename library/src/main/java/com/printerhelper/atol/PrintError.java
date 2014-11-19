@@ -1,6 +1,8 @@
 package com.printerhelper.atol;
 
-public class PrintError{
+import com.printerhelper.common.BasePrintError;
+
+public class PrintError implements BasePrintError {
     private int errorCode;
     private String errorDesc;
 
@@ -19,14 +21,17 @@ public class PrintError{
         errorDesc = description;
     }
 
+    @Override
     public boolean isClear(){
         return errorCode == DefaultPrintError.SUCCESS.code;
     }
 
+    @Override
     public String getErrorDesc() {
         return errorDesc;
     }
 
+    @Override
     public int getErrorCode() {
         return errorCode;
     }
