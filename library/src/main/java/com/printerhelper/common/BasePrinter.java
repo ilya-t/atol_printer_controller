@@ -20,7 +20,7 @@ public interface BasePrinter{
     void terminateInstance();
 
     BasePrintError applyDeviceInfo(final String deviceInfo);
-    BasePrinterInfo getDeviceInfo();
+    BaseDeviceSettings getDeviceInfo();
 
     long getPrinterTimeInMillis();
     boolean isConfigured();

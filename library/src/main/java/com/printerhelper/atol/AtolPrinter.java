@@ -144,7 +144,7 @@ public class AtolPrinter implements BasePrinter {
     public void configure(Activity activity) {
         Intent intent = new Intent(activity, SettingsActivity.class);
         if (getConnectionSettings().isDeviceConfigured()){
-            intent.putExtra(SettingsActivity.DEVICE_SETTINGS, getConnectionSettings().getSettingsConfig());
+            intent.putExtra(SettingsActivity.DEVICE_SETTINGS, getConnectionSettings().getDeviceConfig());
         }
         activity.startActivityForResult(intent, REQUEST_CODE);
     }
@@ -159,7 +159,7 @@ public class AtolPrinter implements BasePrinter {
     /** connects to currently configured device */
     @Override
     public PrintError connectDevice(){
-        String settingsConfig = settingsContainer.getSettingsConfig();
+        String settingsConfig = settingsContainer.getConnectSettings();
 
         PrintError error = tryConnect(settingsConfig);
 
@@ -495,7 +495,7 @@ public class AtolPrinter implements BasePrinter {
 
     private DeviceSettings getConnectionSettings() {
         if (connectionSettings == null){
-            connectionSettings = DeviceSettings.getInstance(settingsContainer.getSettingsConfig());
+            connectionSettings = DeviceSettings.getInstance(settingsContainer.getConnectSettings());
         }
         return connectionSettings;
     }

@@ -3,6 +3,7 @@ package com.printerhelper.atol;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.printerhelper.common.BaseDeviceSettings;
 import com.printerhelper.common.SettingsContainer;
 
 public class DefaultSettingsContainer implements SettingsContainer {
@@ -15,14 +16,14 @@ public class DefaultSettingsContainer implements SettingsContainer {
     }
 
     @Override
-    public void saveDeviceSettings(DeviceSettings deviceSettings) {
+    public void saveDeviceSettings(BaseDeviceSettings deviceSettings) {
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(PREFS_DEVICE_SETTINGS, deviceSettings.getSettingsConfig());
+        editor.putString(PREFS_DEVICE_SETTINGS, deviceSettings.getDeviceConfig());
         editor.apply();
     }
 
     @Override
-    public String getSettingsConfig() {
+    public String getConnectSettings() {
         return preferences.getString(PREFS_DEVICE_SETTINGS, "");
     }
 }

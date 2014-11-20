@@ -1,6 +1,6 @@
 package com.printerhelper.atol;
 
-import com.printerhelper.common.BasePrinterInfo;
+import com.printerhelper.common.BaseDeviceSettings;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -9,7 +9,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.IOException;
 import java.io.StringReader;
 
-public class DeviceSettings implements BasePrinterInfo {
+public class DeviceSettings implements BaseDeviceSettings {
     /** обычное подключение */
     public final static int CONNECTION_BASIC = 1;
     /** небезопасное подключение */
@@ -176,7 +176,6 @@ public class DeviceSettings implements BasePrinterInfo {
     }
 
     /** @return MAC-address of device in format "AA-BB-CC-DD- EE-FF" */
-    @Override
     public String getDeviceAddress() {
         return deviceAddress;
     }
@@ -222,7 +221,8 @@ public class DeviceSettings implements BasePrinterInfo {
         return error;
     }
 
-    public String getSettingsConfig() {
+    @Override
+    public String getDeviceConfig() {
         return settingsConfig;
     }
 
