@@ -7,9 +7,11 @@ import android.content.Intent;
 import com.atol.drivers.fptr.IFptr;
 import com.atol.drivers.fptr.settings.SettingsActivity;
 import com.printerhelper.common.BaseCashCheck;
+import com.printerhelper.common.BaseDeviceSettings;
 import com.printerhelper.common.BasePrintError;
 import com.printerhelper.common.BasePrinter;
 import com.printerhelper.common.CheckItem;
+import com.printerhelper.common.DefaultSettingsContainer;
 import com.printerhelper.common.SettingsContainer;
 
 import java.util.ArrayList;
@@ -442,8 +444,9 @@ public class AtolPrinter implements BasePrinter {
 
     /** disconnects from printer device */
     @Override
-    public void disconnectDevice() {
+    public BasePrintError disconnectDevice() {
         driver.put_DeviceEnabled(false);
+        return DefaultPrintError.SUCCESS.get();
     }
 
     /** destroys Printer singleton and driver instances*/
@@ -459,7 +462,7 @@ public class AtolPrinter implements BasePrinter {
     }
 
     @Override
-    public DeviceSettings getDeviceInfo(){
+    public BaseDeviceSettings getDeviceInfo(){
         return DeviceSettings.getInstance(this, true);
     }
 

@@ -16,7 +16,7 @@ public interface BasePrinter{
     BasePrintError printString(final String line);
     BasePrintError reportX();
     BasePrintError reportZ();
-    void disconnectDevice();
+    BasePrintError disconnectDevice();
     void terminateInstance();
 
     BasePrintError applyDeviceInfo(final String deviceInfo);
