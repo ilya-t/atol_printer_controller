@@ -5,6 +5,7 @@ import java.util.List;
 public class CheckItem {
     private List<String> headers;
     private String title;
+    private int vatAmount = 0;
     private int department;
     private double quantity;
     private double price;
@@ -58,5 +59,13 @@ public class CheckItem {
 
     public List<String> getHeaders() {
         return headers;
+    }
+
+    public int getVatAmount() {
+        return vatAmount;
+    }
+
+    public void setVatAmount(int vatAmount) {
+        this.vatAmount = vatAmount;
     }
 }
