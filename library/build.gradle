@@ -3,7 +3,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.13.2'
+        classpath 'com.android.tools.build:gradle:0.14.2'
     }
 }
 
@@ -14,7 +14,6 @@ android {
     buildToolsVersion "19.1.0"
 
     defaultConfig {
-        applicationId "com.atolprinterhelper.atol"
         minSdkVersion 9
         targetSdkVersion 14
         versionCode 1
@@ -27,15 +26,29 @@ android {
     }
     buildTypes {
         release {
-            runProguard false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        exclude 'com/printerhelper/common/**'
+    }
+
+    sourceSets.main.java{
+        exclude 'com/google/gson/**'
+    }
 }
 
+
 dependencies {
-//    compile fileTree(dir: 'libs', include: ['*.jar'])
-    //    compile 'com.android.support:appcompat-v7:19.+'
     compile files('libs/armeabi.jar')
     compile files('libs/fptrlib.jar')
+    compile files('libs/printerCommons.jar')
+}
+
+
+task jar(type: Jar) << {
+    from android.sourceSets.main.java
+    with jar
 }
