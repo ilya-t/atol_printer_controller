@@ -97,7 +97,7 @@ public class AtolPrinter implements BasePrinter {
 
 
     private SettingsContainer settingsContainer;
-    private DeviceSettings connectionSettings;
+    private AtolDeviceSettings connectionSettings;
 
     public synchronized static AtolPrinter getInstance(Context context){
         if (instance == null){
@@ -463,7 +463,7 @@ public class AtolPrinter implements BasePrinter {
 
     @Override
     public BaseDeviceSettings getDeviceInfo(){
-        return DeviceSettings.getInstance(this, true);
+        return AtolDeviceSettings.getInstance(this, true);
     }
 
     public int getMode(){
@@ -496,9 +496,9 @@ public class AtolPrinter implements BasePrinter {
         return new String(array);
     }
 
-    private DeviceSettings getConnectionSettings() {
+    private AtolDeviceSettings getConnectionSettings() {
         if (connectionSettings == null){
-            connectionSettings = DeviceSettings.getInstance(settingsContainer.getConnectSettings());
+            connectionSettings = AtolDeviceSettings.getInstance(settingsContainer.getConnectSettings());
         }
         return connectionSettings;
     }
@@ -518,7 +518,7 @@ public class AtolPrinter implements BasePrinter {
             if (data != null && data.getExtras() != null && data.getExtras().containsKey(SettingsActivity.DEVICE_SETTINGS)){
                 String settings = data.getExtras().getString(SettingsActivity.DEVICE_SETTINGS);
 
-                DeviceSettings deviceSettings = DeviceSettings.getInstance(settings);
+                AtolDeviceSettings deviceSettings = AtolDeviceSettings.getInstance(settings);
                 if (deviceSettings.getError().isClear() && deviceSettings.isDeviceConfigured()){
                     settingsContainer.saveDeviceSettings(deviceSettings);
                     if (!getConnectionSettings().isDeviceConfigured()){

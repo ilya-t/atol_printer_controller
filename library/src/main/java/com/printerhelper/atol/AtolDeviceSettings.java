@@ -9,7 +9,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.IOException;
 import java.io.StringReader;
 
-public class DeviceSettings implements BaseDeviceSettings {
+public class AtolDeviceSettings implements BaseDeviceSettings {
     /** обычное подключение */
     public final static int CONNECTION_BASIC = 1;
     /** небезопасное подключение */
@@ -33,8 +33,8 @@ public class DeviceSettings implements BaseDeviceSettings {
     private long dateTime;//timestamp
     private PrintError error;
 
-    static DeviceSettings getInstance(String settingsConfig){
-        final DeviceSettings ds = new DeviceSettings();
+    static AtolDeviceSettings getInstance(String settingsConfig){
+        final AtolDeviceSettings ds = new AtolDeviceSettings();
         ds.settingsConfig = settingsConfig;
         XmlPullParser parser = null;
 
@@ -127,8 +127,8 @@ public class DeviceSettings implements BaseDeviceSettings {
         return ds;
     }
 
-    public static DeviceSettings getInstance(AtolPrinter atolPrinter, final boolean includeDeviceInfo){
-        final DeviceSettings deviceSettings = getInstance(atolPrinter.getDriver().get_DeviceSettings());
+    public static AtolDeviceSettings getInstance(AtolPrinter atolPrinter, final boolean includeDeviceInfo){
+        final AtolDeviceSettings deviceSettings = getInstance(atolPrinter.getDriver().get_DeviceSettings());
 
 
         if (includeDeviceInfo) {
@@ -163,7 +163,7 @@ public class DeviceSettings implements BaseDeviceSettings {
         return deviceSettings;
     }
 
-    private DeviceSettings(){
+    private AtolDeviceSettings(){
 
     }
 
