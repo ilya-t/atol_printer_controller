@@ -5,6 +5,7 @@ public enum DefaultPrintError {
     SUCCESS(0, ""),
     DEVICE_CONNECTION(-1, "Нет связи"),
     DEVICE_DISCONNECT(-21, "Соединение разорвано"),
+    REPORT_INTERRUPTED(-3883,"Снятие отчета прервалось"),
 
     FAIL(1, "Неизвестная ошибка"),
     DRIVER_CREATION(2,"Не удалось получить доступ к драйверу");

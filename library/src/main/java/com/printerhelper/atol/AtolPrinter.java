@@ -409,6 +409,16 @@ public class AtolPrinter implements BasePrinter {
                     lastError.getErrorCode() == DefaultPrintError.DEVICE_CONNECTION.code){
                 driver.put_DeviceEnabled(false);
             }
+
+            if (lastError.getErrorCode() == DefaultPrintError.REPORT_INTERRUPTED.code){
+                driver.put_DeviceEnabled(false);
+                try {
+                    initDriver();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+
             return lastError;
         }
         return DefaultPrintError.FAIL.get();
