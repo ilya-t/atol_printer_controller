@@ -207,6 +207,12 @@ public class AtolDeviceSettings implements BaseDeviceSettings {
         return serialNumber;
     }
 
+    @Override
+    public boolean isConfigured() {
+        return deviceName != null && !deviceName.equals("") &&
+                deviceAddress != null && !deviceAddress.equals("");
+    }
+
     /** @return printer timestamp (since last status update) if device is connected*/
     @Override
     public long getDateTime() {
@@ -224,10 +230,5 @@ public class AtolDeviceSettings implements BaseDeviceSettings {
     @Override
     public String getDeviceConfig() {
         return settingsConfig;
-    }
-
-    public boolean isDeviceConfigured() {
-        return deviceName != null && !deviceName.equals("") &&
-               deviceAddress != null && !deviceAddress.equals("");
     }
 }

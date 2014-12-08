@@ -145,7 +145,7 @@ public class AtolPrinter implements BasePrinter {
     @Override
     public void configure(Activity activity) {
         Intent intent = new Intent(activity, SettingsActivity.class);
-        if (getConnectionSettings().isDeviceConfigured()){
+        if (getConnectionSettings().isConfigured()){
             intent.putExtra(SettingsActivity.DEVICE_SETTINGS, getConnectionSettings().getDeviceConfig());
         }
         activity.startActivityForResult(intent, REQUEST_CODE);
@@ -515,7 +515,7 @@ public class AtolPrinter implements BasePrinter {
 
     @Override
     public boolean isConfigured() {
-        return getConnectionSettings().isDeviceConfigured();
+        return getConnectionSettings().isConfigured();
     }
 
     protected IFptr getDriver() {
@@ -529,9 +529,9 @@ public class AtolPrinter implements BasePrinter {
                 String settings = data.getExtras().getString(SettingsActivity.DEVICE_SETTINGS);
 
                 AtolDeviceSettings deviceSettings = AtolDeviceSettings.getInstance(settings);
-                if (deviceSettings.getError().isClear() && deviceSettings.isDeviceConfigured()){
+                if (deviceSettings.getError().isClear() && deviceSettings.isConfigured()){
                     settingsContainer.saveDeviceSettings(deviceSettings);
-                    if (!getConnectionSettings().isDeviceConfigured()){
+                    if (!getConnectionSettings().isConfigured()){
                         connectionSettings = deviceSettings;
                     }
                 }
