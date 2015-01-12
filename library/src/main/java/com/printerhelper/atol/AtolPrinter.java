@@ -369,7 +369,30 @@ public class AtolPrinter implements BasePrinter {
 
         driver.put_TypeClose(paymentType);
         if (driver.CloseCheck() != 0){
-            return getLastError();
+            error = getLastError();
+
+            if (error.getErrorCode() == -20) { //timeout
+                disconnectDevice();
+                driver.destroy();
+
+                try {
+                    initDriver();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                    return new PrintError(error.getErrorCode(), error.getErrorDesc()+" init fail: "+ e.toString());
+                }
+
+                PrintError connectionError = connectDevice();
+                if (connectionError.isClear()){
+                    if (driver.get_CheckNumber()-1 != checkId){
+                        return new PrintError(error.getErrorCode(), error.getErrorDesc()+" checknumber fail: "+driver.get_CheckNumber() +" / "+ checkId);
+                    }
+                }else{
+                    return new PrintError(error.getErrorCode(), error.getErrorDesc()+" connect fail: "+ connectionError.getErrorDesc());
+                }
+            }else{
+                return error;
+            }
         }
 
         long timeEnd = Calendar.getInstance().getTimeInMillis();
