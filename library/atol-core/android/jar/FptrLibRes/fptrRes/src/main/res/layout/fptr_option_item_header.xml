@@ -1,0 +1,27 @@
+<!-- list_header.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:baselineAligned="false"
+              android:focusable="false"
+              android:focusableInTouchMode="false"
+              android:orientation="horizontal"
+              android:paddingLeft="5dp">
+
+    <TextView
+        android:id="@+id/header"
+        style="?android:attr/listSeparatorTextViewStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="18sp"/>
+
+    <ImageView
+        android:id="@+id/imgArrow"
+        android:layout_width="20dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|center_vertical"
+        android:layout_weight="0"/>
+
+</LinearLayout>

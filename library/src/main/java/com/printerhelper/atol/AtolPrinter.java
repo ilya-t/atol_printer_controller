@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
+import com.atol.drivers.fptr.Fptr;
 import com.atol.drivers.fptr.IFptr;
 import com.atol.drivers.fptr.settings.SettingsActivity;
+import com.atol.drivers.fptrres.R;
 import com.printerhelper.common.BaseCashCheck;
 import com.printerhelper.common.BaseDeviceSettings;
 import com.printerhelper.common.BasePrintError;
@@ -107,12 +109,12 @@ public class AtolPrinter implements BasePrinter {
         return instance;
     }
 
-    protected AtolPrinter(Context context){
+    protected AtolPrinter(Context context) {
         this.context = context;
         settingsContainer = (this instanceof SettingsContainer)
-                                ?(SettingsContainer)this
-                                :new DefaultSettingsContainer(context);
-        if (driver == null){
+                ? (SettingsContainer) this
+                : new DefaultSettingsContainer(context);
+        if (driver == null) {
             try {
                 initDriver();
             } catch (IllegalAccessException e) {
@@ -126,7 +128,7 @@ public class AtolPrinter implements BasePrinter {
             driver.destroy();
             driver = null;
         }
-        driver = new IFptr();
+        driver = new Fptr();
         try {
             driver.create(context);
         } catch (NullPointerException e) {
