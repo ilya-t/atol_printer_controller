@@ -29,10 +29,10 @@ android {
     }
 
     sourceSets {
-        all {
+        main {
             manifest.srcFile 'atol-core/android/jar/FptrLibRes/fptrRes/src/main/AndroidManifest.xml'
-            jniLibs.srcDirs 'atol-core/android/lib'
-            res.srcDirs 'atol-core/android/jar/FptrLibRes/fptrRes/src/main/res'
+            jniLibs.srcDirs += 'atol-core/android/lib'
+            res.srcDirs += 'atol-core/android/jar/FptrLibRes/fptrRes/src/main/res'
         }
     }
 }
