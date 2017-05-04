@@ -6,6 +6,7 @@ import android.content.Intent;
 
 import com.atol.drivers.fptr.Fptr;
 import com.atol.drivers.fptr.IFptr;
+import com.atol.drivers.fptr.settings.DeviceSettings;
 import com.atol.drivers.fptr.settings.SettingsActivity;
 import com.atol.drivers.fptrres.R;
 import com.printerhelper.common.BaseCashCheck;
@@ -147,10 +148,22 @@ public class AtolPrinter implements BasePrinter {
     @Override
     public void configure(Activity activity) {
         Intent intent = new Intent(activity, SettingsActivity.class);
-        if (getConnectionSettings().isConfigured()){
+        if (getConnectionSettings().isConfigured()) {
             intent.putExtra(SettingsActivity.DEVICE_SETTINGS, getConnectionSettings().getDeviceConfig());
+        } else {
+            intent.putExtra(SettingsActivity.DEVICE_SETTINGS, createEmptyDeviceSettings());
         }
         activity.startActivityForResult(intent, REQUEST_CODE);
+    }
+
+    /**
+     * Workaround for 9.9.1 driver version. 'ConnectionType' value must be set
+     * in order to be used later at {@link com.atol.drivers.fptr.settings.BluetoothSearchActivity}.
+     */
+    private String createEmptyDeviceSettings() {
+        DeviceSettings deviceSettings = new DeviceSettings();
+        deviceSettings.add("ConnectionType", "1");
+        return deviceSettings.toXML();
     }
 
     /** @return true if connected to printer */
