@@ -1,5 +1,8 @@
 package com.printerhelper.atol;
 
+import android.text.TextUtils;
+
+import com.atol.drivers.fptr.settings.DeviceSettings;
 import com.printerhelper.common.BaseDeviceSettings;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -229,6 +232,19 @@ public class AtolDeviceSettings implements BaseDeviceSettings {
 
     @Override
     public String getDeviceConfig() {
+        if (TextUtils.isEmpty(settingsConfig)) {
+            return createEmptyDeviceSettings();
+        }
         return settingsConfig;
+    }
+
+    /**
+     * Workaround for 9.9.1 driver version. 'ConnectionType' value must be set
+     * in order to be used later at {@link com.atol.drivers.fptr.settings.BluetoothSearchActivity}.
+     */
+    private static String createEmptyDeviceSettings() {
+        DeviceSettings deviceSettings = new DeviceSettings();
+        deviceSettings.add("ConnectionType", "1");
+        return deviceSettings.toXML();
     }
 }
